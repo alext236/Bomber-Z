@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour {
     [Range (0f, 2f)]
     public float edgePadding;   //For putting walls or something on the side to limit player movement
 
+    public GameObject bomb;
+
     // Use this for initialization
     void Start() {
 
@@ -17,9 +19,13 @@ public class PlayerController : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         KeyboardMovement();
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            SpawnBomb();
+        }
     }
 
     void KeyboardMovement() {
+        //TODO: consider limit movement to one tile per key input
         //movement change depends on speed given
         Vector3 moveLeftRight = Vector3.right * speed * Time.deltaTime;
         Vector3 moveUpDown = Vector3.up * speed * Time.deltaTime;
@@ -59,6 +65,9 @@ public class PlayerController : MonoBehaviour {
 
         transform.position = limitPos;
 
+    }
 
+    void SpawnBomb() {
+        GameObject newBomb = Instantiate(bomb, transform.position, Quaternion.identity) as GameObject;
     }
 }
