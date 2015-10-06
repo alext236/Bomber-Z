@@ -6,10 +6,11 @@ public class PlayerController : MonoBehaviour {
     [Range(1f, 10f)]
     public float speed;
 
-    [Range (0f, 2f)]
+    [Range (1f, 2f)]
     public float edgePadding;   //For putting walls or something on the side to limit player movement
 
     public GameObject bomb;
+    public GameObject ground;
 
     // Use this for initialization
     void Start() {
@@ -46,28 +47,29 @@ public class PlayerController : MonoBehaviour {
             transform.position += MoveForwardBackward;
         }
 
-        //RestrictPosition();
+        RestrictPosition();
     }
-    //TODO: change this to suit 3D space
+    
     void RestrictPosition() {
         Vector3 limitPos = transform.position;
-        Camera camera = Camera.main;
 
-        float xMin = camera.ViewportToWorldPoint(new Vector3(0, 0)).x + edgePadding;
-        float xMax = camera.ViewportToWorldPoint(new Vector3(1, 1)).x - edgePadding;
-        float yMin = camera.ViewportToWorldPoint(new Vector3(0, 0)).y + edgePadding;
-        float yMax = camera.ViewportToWorldPoint(new Vector3(1, 1)).y - edgePadding;
+        float xMin = edgePadding;
+        float xMax = ground.transform.localScale.x;
+        float zMin = edgePadding;
+        float zMax = ground.transform.localScale.z;
 
         limitPos.x = Mathf.Clamp(limitPos.x, xMin, xMax);
-        limitPos.y = Mathf.Clamp(limitPos.y, yMin, yMax);
-        //this is a better way than directly giving values for xMin, xMax etc for when we change sprite size
-        //we only need to adjust the edge padding variable
+        limitPos.z = Mathf.Clamp(limitPos.z, zMin, zMax);        
 
         transform.position = limitPos;
 
     }
 
     void SpawnBomb() {
-        GameObject newBomb = Instantiate(bomb, transform.position, Quaternion.identity) as GameObject;
+        //Bombs can only placed on the middle of a tile
+        Vector3 bombPosition = transform.position;
+        bombPosition.x = Mathf.Round(bombPosition.x);
+        bombPosition.z = Mathf.Round(bombPosition.z);
+        GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
     }
 }
