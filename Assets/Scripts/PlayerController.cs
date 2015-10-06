@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour {
         //TODO: consider limit movement to one tile per key input
         //movement change depends on speed given
         Vector3 moveLeftRight = Vector3.right * speed * Time.deltaTime;
-        Vector3 moveUpDown = Vector3.up * speed * Time.deltaTime;
+        Vector3 MoveForwardBackward = Vector3.forward * speed * Time.deltaTime;
 
         if (Input.GetKey(KeyCode.A)) {
             transform.position -= moveLeftRight;
@@ -39,16 +39,16 @@ public class PlayerController : MonoBehaviour {
         }
         
         if (Input.GetKey(KeyCode.S)) {
-            transform.position -= moveUpDown;
+            transform.position -= MoveForwardBackward;
         }
 
         if (Input.GetKey(KeyCode.W)) {
-            transform.position += moveUpDown;
+            transform.position += MoveForwardBackward;
         }
 
-        RestrictPosition();
+        //RestrictPosition();
     }
-
+    //TODO: change this to suit 3D space
     void RestrictPosition() {
         Vector3 limitPos = transform.position;
         Camera camera = Camera.main;
