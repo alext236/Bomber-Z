@@ -13,6 +13,7 @@ public class Bomb : MonoBehaviour {
 	
 	}
 
+    //Used as animation event
     void DestroyBomb() {
         Destroy(gameObject);
     }
