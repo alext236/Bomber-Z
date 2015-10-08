@@ -16,12 +16,14 @@ public class PlayerController : MonoBehaviour {
     Vector3 myGridSize;
     Vector3 myLocationOfFirstCube;
     ArrayList myMap;
+
     // Use this for initialization
     void Start() {
-
+        PlacePlayerOnMap();
     }
 
-    Vector3 mLocatePlayerRandomly(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
+    //Find the first available free tile
+    Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
     {
         bool flag_continue = true;
         int index_i = 0;
@@ -44,15 +46,22 @@ public class PlayerController : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() 
-    {
-        if (!flag_got_map_info)
-        {
+    void Update() {        
+        KeyboardMovement();
+
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            SpawnBomb();
+        }
+    }
+
+    private void PlacePlayerOnMap() {
+        if (!flag_got_map_info) {
             myMapInfo = planeInfo.GetComponent<CreateMap>();
             myGridSize = myMapInfo.getGridSize();
             myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
             myMap = myMapInfo.GetMyMap();
 
+            //Reduce player size if player size is bigger than grid size
             Vector3 player_size = this.transform.localScale;
             if (player_size[0] > myGridSize[0])
                 player_size[0] = myGridSize[0] - myGridSize[0] / 10;
@@ -60,63 +69,52 @@ public class PlayerController : MonoBehaviour {
                 player_size[2] = myGridSize[2] - myGridSize[2] / 10;
             this.transform.localScale = player_size;
 
-            this.transform.position = mLocatePlayerRandomly(myMap, myLocationOfFirstCube, myGridSize) + new Vector3(0f, transform.position[1], 0f);
-            // +new Vector3(this.transform.localScale[0] / 2, 0f, this.transform.localScale[2] / 2);
+            this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize) + new Vector3(0f, transform.position[1], 0f);
+            //+new Vector3(this.transform.localScale[0] / 2, 0f, this.transform.localScale[2] / 2);
 
             flag_got_map_info = true;
         }
-        KeyboardMovement();
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            SpawnBomb();
+    }
+
+    bool DoesRaycastHitWall(Vector3 originPos) {
+        RaycastHit hit;
+        Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
+        Ray newRay = new Ray(originPos, Vector3.down);
+
+        if (Physics.Raycast(newRay, out hit, (originPosMirror - originPos).magnitude)) {
+            Debug.DrawRay(originPos, Vector3.down, Color.red);
+            if (hit.transform.name != "Grass Playground") {
+                return true;
+            }
         }
+
+        return false;
     }
 
     bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize)
-    {
-        RaycastHit hit;
-
-        Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
-        Vector3 p2 = new Vector3(p1[0], -p1[1], p1[2]);
-        if (Physics.Raycast(p1, (p2 - p1) / (p2 - p1).magnitude, out hit, (p2 - p1).magnitude))
-        {
-            Transform objectHit = hit.transform;
-            if (objectHit.name != "Grass Playground")
-            {
-                return false;
-            }
+    {                
+        //Draw a RayCast on lower left of player sprite
+        Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);        
+        if (DoesRaycastHitWall(p1)) {
+            return false;
         }
 
-        p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
-        p2 = new Vector3(p1[0], -p1[1], p1[2]);
-        if (Physics.Raycast(p1, (p2 - p1) / (p2 - p1).magnitude, out hit, (p2 - p1).magnitude))
-        {
-            Transform objectHit = hit.transform;
-            if (objectHit.name != "Grass Playground")
-            {
-                return false;
-            }
+        //Draw a RayCast on upper left of player sprite
+        p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);        
+        if (DoesRaycastHitWall(p1)) {
+            return false;
         }
 
-        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
-        p2 = new Vector3(p1[0], -p1[1], p1[2]);
-        if (Physics.Raycast(p1, (p2 - p1) / (p2 - p1).magnitude, out hit, (p2 - p1).magnitude))
-        {
-            Transform objectHit = hit.transform;
-            if (objectHit.name != "Grass Playground")
-            {
-                return false;
-            }
+        //Draw a RayCast on lower right of player sprite
+        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);        
+        if (DoesRaycastHitWall(p1)) {
+            return false;
         }
 
-        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
-        p2 = new Vector3(p1[0], -p1[1], p1[2]);
-        if (Physics.Raycast(p1, (p2 - p1) / (p2 - p1).magnitude, out hit, (p2 - p1).magnitude))
-        {
-            Transform objectHit = hit.transform;
-            if (objectHit.name != "Grass Playground")
-            {
-                return false;
-            }
+        //Draw a RayCast on upper right of player sprite
+        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);        
+        if (DoesRaycastHitWall(p1)) {
+            return false;
         }
 
         return true;
@@ -127,29 +125,30 @@ public class PlayerController : MonoBehaviour {
         Vector3 moveLeftRight = Vector3.right * speed * Time.deltaTime;
         Vector3 MoveForwardBackward = Vector3.forward * speed * Time.deltaTime;
 
-        Vector3 nPos = transform.position;
+        Vector3 targetPos = transform.position;
         if (Input.GetKey(KeyCode.A)) {
-            nPos -= moveLeftRight;
+            targetPos -= moveLeftRight;
         }
 
         if (Input.GetKey(KeyCode.D)) {
-            nPos += moveLeftRight;
+            targetPos += moveLeftRight;
         }
         
         if (Input.GetKey(KeyCode.S)) {
-            nPos -= MoveForwardBackward;
+            targetPos -= MoveForwardBackward;
         }
 
         if (Input.GetKey(KeyCode.W)) {
-            nPos += MoveForwardBackward;
+            targetPos += MoveForwardBackward;
         }
 
-        if (isInsideFreeSpace(nPos, new Vector3(this.transform.localScale[0]/2, 0f, this.transform.localScale[2]/10)))
+        if (isInsideFreeSpace(targetPos, new Vector3(this.transform.localScale[0]/2, 0f, this.transform.localScale[2]/10)))
         {
-            transform.position = nPos;
+            transform.position = targetPos;
         }
     }
-    
+
+    //Obsolete code
     void RestrictPosition() {
         Vector3 limitPos = transform.position;
 

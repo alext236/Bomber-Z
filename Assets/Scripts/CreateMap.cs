@@ -227,8 +227,9 @@ public class CreateMap : MonoBehaviour {
         public Vector2 mFirstBorder;
         public Vector2 mEndBorder;
     }
-	// Use this for initialization
-	void Start () {
+	
+    // Use this for initialization
+	void Awake () {
         myAreaDivider = new myDividedArea(new Vector2(1, 1), new Vector2(N - 2, M - 2), numberOfRandSamples);
         initializing_Map(N, M);
         myAreaDivider.myDivideAreaFunc(myMap, myAreaDivider);
@@ -345,10 +346,20 @@ public class CreateMap : MonoBehaviour {
             {
                 if (myAreaDivider.getMapVal(myMap, i, j) == 1)
                 {
+                    //Instantiate here a wall prefab instead of a simple cube
                     GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                     cube_ij.transform.localScale = iGridSize;
                     myGameObjects.Add(cube_ij);
+
+                    //Sort all the cube into appropriate parent
+                    if (!GameObject.Find("Indestructible Wall")) {
+                        GameObject newParent = new GameObject("Indestructible Wall");
+                        cube_ij.transform.SetParent(newParent.transform);
+                    } else {
+                        cube_ij.transform.SetParent(GameObject.Find("Indestructible Wall").transform);
+                    }
+                    
                 }
             }
         }
