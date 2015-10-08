@@ -5,9 +5,10 @@ using System.IO;
 
 public class CreateMap : MonoBehaviour {
     public enum myDividerType { X, Y };
+    public enum GridType { inDestructible = 1, Free = 0 };
     public class myDividedArea
     {
-        public myDividedArea(Vector2 iFirstBorder, Vector2 iEndBorder)
+        public myDividedArea(Vector2 iFirstBorder, Vector2 iEndBorder, int iNumberOfRandSamples)
         {
             m_divider_type = myDividerType.X;
             mFirstBorder = iFirstBorder;
@@ -15,9 +16,10 @@ public class CreateMap : MonoBehaviour {
             mLinkToFather = null;
             //mLeftChild = null;
             //mRightChild = null;
+            numberOfRandSamples = iNumberOfRandSamples;
         }
 
-        public myDividedArea(Vector2 iFirstBorder, Vector2 iEndBorder, myDividedArea iLinkToFather, myDividerType iNextType)
+        public myDividedArea(Vector2 iFirstBorder, Vector2 iEndBorder, myDividedArea iLinkToFather, myDividerType iNextType, int iNumberOfRandSamples)
         {
             m_divider_type = iNextType;
             mFirstBorder = iFirstBorder;
@@ -25,7 +27,7 @@ public class CreateMap : MonoBehaviour {
             mLinkToFather = iLinkToFather;
             //mLeftChild = null;
             //mRightChild = null;
-            
+            numberOfRandSamples = iNumberOfRandSamples;
         }
 
         public int getMapVal(ArrayList iMap, int i, int j)
@@ -74,7 +76,7 @@ public class CreateMap : MonoBehaviour {
                 }
                 else
                 {
-                    setMapVal(iMap, index_i_map, index_j_map, 1);
+                    setMapVal(iMap, index_i_map, index_j_map, (int)GridType.inDestructible);
                 }
                 w_counter++;
             }
@@ -86,7 +88,7 @@ public class CreateMap : MonoBehaviour {
                     Vector2 myEmptyPoint = (Vector2)iEmptyPoints[i];
                     if (myCheckOneWayPath(iMap, myEmptyPoint))
                     {
-                        setMapVal(iMap, (int)myEmptyPoint[0], (int)myEmptyPoint[1], 0);
+                        setMapVal(iMap, (int)myEmptyPoint[0], (int)myEmptyPoint[1], (int)GridType.Free);
                     }
                 }
             }
@@ -127,7 +129,6 @@ public class CreateMap : MonoBehaviour {
 
         public void myDivideAreaFunc(ArrayList iMap, myDividedArea iSubArea)
         {
-            int numberOfRandSamples = 5;
             int started_empty_poses = 0;
             int end_empty_poses = 0;
             if (iSubArea.mFirstBorder[0] == iSubArea.mEndBorder[0] || iSubArea.mFirstBorder[1] == iSubArea.mEndBorder[1])
@@ -211,14 +212,14 @@ public class CreateMap : MonoBehaviour {
 
             myMakeWall(iMap, new Vector2(x_sample, y_sample), iSubArea.m_divider_type, setEmptyPoses, iSubArea.mFirstBorder, iSubArea.mEndBorder);
 
-            myDividedArea left_divided_area = new myDividedArea(left_child_boundary_start, left_child_boundary_end, this, next_type);
-            myDividedArea right_divided_area = new myDividedArea(right_child_boundary_start, right_child_boundary_end, this, next_type);
+            myDividedArea left_divided_area = new myDividedArea(left_child_boundary_start, left_child_boundary_end, this, next_type, numberOfRandSamples);
+            myDividedArea right_divided_area = new myDividedArea(right_child_boundary_start, right_child_boundary_end, this, next_type, numberOfRandSamples);
 
             myDivideAreaFunc(iMap, left_divided_area);
             myDivideAreaFunc(iMap, right_divided_area);
             return;
         }
-
+        int numberOfRandSamples;
         public myDividedArea mLinkToFather;
         //public myDividedArea mLeftChild;
         //public myDividedArea mRightChild;
@@ -228,21 +229,43 @@ public class CreateMap : MonoBehaviour {
     }
 	// Use this for initialization
 	void Start () {
-        myAreaDivider = new myDividedArea(new Vector2(1, 1), new Vector2(N - 2, M - 2));
+        myAreaDivider = new myDividedArea(new Vector2(1, 1), new Vector2(N - 2, M - 2), numberOfRandSamples);
         initializing_Map(N, M);
         myAreaDivider.myDivideAreaFunc(myMap, myAreaDivider);
         myWriteMap();
         myGameObjects = new ArrayList();
-        RectTransform plane_transform = plane.GetComponent<RectTransform>();
-        Vector2 plane_2d_size = plane_transform.sizeDelta;
-        myCreateScene(new Vector3(plane_2d_size[0] / N, plane_2d_size[1] / M, 0.5f), plane_transform.transform.position - new Vector3(plane_2d_size[0]/2, plane_2d_size[1]/2, 0f)
-            + new Vector3(plane_2d_size[0] / (2*N), plane_2d_size[1] / (2*M), 0f));
+//        RectTransform plane_transform = plane.GetComponent<RectTransform>();
+        Transform mPlane_Transform = plane.transform;
+        Vector3 plane_3d_size = mPlane_Transform.localScale;
+        grid_size = new Vector3(plane_3d_size[0] / N, 0.5f, plane_3d_size[2] / M);
+        first_cube_location = mPlane_Transform.localPosition - new Vector3(plane_3d_size[0] / 2, 0f, plane_3d_size[2] / 2)
+            + new Vector3(plane_3d_size[0] / (2 * N), 0f, plane_3d_size[2] / (2 * M));
+        myCreateScene(grid_size, first_cube_location);
     }
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
+
+    public Vector3 getGridSize()
+    {
+        return grid_size;
+    }
+
+    public Vector3 getFirstLocationOfCube()
+    {
+        return first_cube_location;
+    }
+
+    public ArrayList GetMyMap()
+    {
+        return myMap;
+    }
+
+    public int numberOfRandSamples = 20;//number of random zeros inside the map (we want this much zeros but size all zeros are not acceptable we might not get as much zeros as we want)
+    Vector3 grid_size;
+    Vector3 first_cube_location;
     public GameObject plane;
     public int N = 50;//create a (N-2)*(N-2) map with boarder
     public int M = 50;
@@ -315,7 +338,7 @@ public class CreateMap : MonoBehaviour {
 
     void myCreateScene(Vector3 iGridSize, Vector3 iLocation)
     {
-        Vector3 d_pos = new Vector3(iLocation[0], iLocation[1], iLocation[2] - iGridSize[2] / 2);
+        Vector3 d_pos = new Vector3(iLocation[0], iLocation[1] + iGridSize[1] / 2, iLocation[2]);
         for (int j = 0; j < M; j++)
         {
             for (int i = 0; i < N; i++)
@@ -323,7 +346,7 @@ public class CreateMap : MonoBehaviour {
                 if (myAreaDivider.getMapVal(myMap, i, j) == 1)
                 {
                     GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    cube_ij.transform.position = new Vector3(i * iGridSize[0], j * iGridSize[1], iGridSize[2] / 2) + d_pos;//x <- X(i), y <- Y(j)
+                    cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                     cube_ij.transform.localScale = iGridSize;
                     myGameObjects.Add(cube_ij);
                 }
