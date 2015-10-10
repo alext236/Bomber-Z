@@ -351,7 +351,7 @@ public class CreateMap : MonoBehaviour {
             {
                 if (myAreaDivider.getMapVal(myMap, i, j) == 1)
                 {
-                    //Instantiate here a wall prefab instead of a simple cube
+                    //Later Instantiate here a wall prefab instead of a simple cube
                     GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                     cube_ij.transform.localScale = iGridSize;

@@ -4,10 +4,7 @@ using System;
 public class PlayerController : MonoBehaviour {
     
     [Range(1f, 10f)]
-    public float speed;
-
-    [Range (1f, 2f)]
-    public float edgePadding;   //For putting walls or something on the side to limit player movement
+    public float speed;    
 
     public GameObject bomb;
 
@@ -145,23 +142,7 @@ public class PlayerController : MonoBehaviour {
             transform.position = targetPos;
         }
     }
-
-    //Obsolete code
-    void RestrictPosition() {
-        Vector3 limitPos = transform.position;
-
-        float xMin = edgePadding;
-        float xMax = planeInfo.transform.localScale.x;
-        float zMin = edgePadding;
-        float zMax = planeInfo.transform.localScale.z;
-
-        limitPos.x = Mathf.Clamp(limitPos.x, xMin, xMax);
-        limitPos.z = Mathf.Clamp(limitPos.z, zMin, zMax);
-
-        transform.position = limitPos;
-
-    }
-
+        
     void SpawnBomb() {
         //Bombs can only placed on the middle of a tile
         Vector3 bombPosition = transform.position;
@@ -173,6 +154,15 @@ public class PlayerController : MonoBehaviour {
                 return;
             }
         }
+
         GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
+
+        if (GameObject.Find("Bomb Parent")) {
+            GameObject parent = GameObject.Find("Bomb Parent");
+            newBomb.transform.SetParent(parent.transform);
+        } else {
+            GameObject parent = new GameObject("Bomb Parent");
+            newBomb.transform.SetParent(parent.transform);
+        } 
     }
 }
