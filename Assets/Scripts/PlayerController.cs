@@ -2,7 +2,7 @@
 using System.Collections;
 using System;
 public class PlayerController : MonoBehaviour {
-    public GameObject planeInfo;
+    
     [Range(1f, 10f)]
     public float speed;
 
@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour {
 
     public GameObject bomb;
 
+    private GameObject planeInfo;
     bool flag_got_map_info = false;
     CreateMap myMapInfo;
     Vector3 myGridSize;
@@ -19,23 +20,20 @@ public class PlayerController : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
+        planeInfo = FindObjectOfType<Playground>().gameObject;
         PlacePlayerOnMap();
     }
 
     //Find the first available free tile
-    Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
-    {
+    Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize) {
         bool flag_continue = true;
         int index_i = 0;
         int index_j = 0;
-        for (int i = 0; i < iMap.Count && flag_continue; i++)
-        {
+        for (int i = 0; i < iMap.Count && flag_continue; i++) {
             ArrayList iMap_col = (ArrayList)iMap[i];
-            for (int j = 0; j < iMap_col.Count && flag_continue; j++)
-            {
+            for (int j = 0; j < iMap_col.Count && flag_continue; j++) {
                 int val_ij = (int)iMap_col[j];
-                if (val_ij == (int)CreateMap.GridType.Free)
-                {
+                if (val_ij == (int) CreateMap.GridType.Free) {
                     flag_continue = false;
                     index_i = i;
                     index_j = j;
@@ -46,7 +44,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {        
+    void Update() {
         KeyboardMovement();
 
         if (Input.GetKeyDown(KeyCode.Space)) {
@@ -92,28 +90,27 @@ public class PlayerController : MonoBehaviour {
         return false;
     }
 
-    bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize)
-    {                
+    bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize) {
         //Draw a RayCast on lower left of player sprite
-        Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);        
+        Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
         if (DoesRaycastHitWall(p1)) {
             return false;
         }
 
         //Draw a RayCast on upper left of player sprite
-        p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);        
+        p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
         if (DoesRaycastHitWall(p1)) {
             return false;
         }
 
         //Draw a RayCast on lower right of player sprite
-        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);        
+        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
         if (DoesRaycastHitWall(p1)) {
             return false;
         }
 
         //Draw a RayCast on upper right of player sprite
-        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);        
+        p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
         if (DoesRaycastHitWall(p1)) {
             return false;
         }
@@ -134,7 +131,7 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetKey(KeyCode.D)) {
             targetPos += moveLeftRight;
         }
-        
+
         if (Input.GetKey(KeyCode.S)) {
             targetPos -= MoveForwardBackward;
         }
@@ -143,8 +140,7 @@ public class PlayerController : MonoBehaviour {
             targetPos += MoveForwardBackward;
         }
 
-        if (isInsideFreeSpace(targetPos, new Vector3(this.transform.localScale[0]/2, 0f, this.transform.localScale[2]/10)))
-        {
+        if (isInsideFreeSpace(targetPos, new Vector3(this.transform.localScale[0] / 2, 0f, this.transform.localScale[2] / 10))) {
             transform.position = targetPos;
         }
     }
@@ -159,7 +155,7 @@ public class PlayerController : MonoBehaviour {
         float zMax = planeInfo.transform.localScale.z;
 
         limitPos.x = Mathf.Clamp(limitPos.x, xMin, xMax);
-        limitPos.z = Mathf.Clamp(limitPos.z, zMin, zMax);        
+        limitPos.z = Mathf.Clamp(limitPos.z, zMin, zMax);
 
         transform.position = limitPos;
 
@@ -170,6 +166,12 @@ public class PlayerController : MonoBehaviour {
         Vector3 bombPosition = transform.position;
         bombPosition.x = Mathf.Round(bombPosition.x);
         bombPosition.z = Mathf.Round(bombPosition.z);
+
+        foreach (Bomb bombPlaced in FindObjectsOfType<Bomb>()) {
+            if (bombPlaced.transform.position == bombPosition) {
+                return;
+            }
+        }
         GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
     }
 }

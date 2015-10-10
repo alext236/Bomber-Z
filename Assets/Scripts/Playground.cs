@@ -34,6 +34,9 @@ public class Playground : MonoBehaviour {
     void SetPlaygroundAxis() {  //So bottom left tile has coordinate (1, y, 1)
         Vector3 newPosition = new Vector3();
         newPosition.x = width / 2 + 0.5f;
+        newPosition.y = transform.position.y;
         newPosition.z = height / 2 + 0.5f;
+        
+        transform.position = newPosition;
     }
 }

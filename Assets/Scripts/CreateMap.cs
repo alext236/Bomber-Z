@@ -363,6 +363,9 @@ public class CreateMap : MonoBehaviour {
                     } else {
                         cube_ij.transform.SetParent(GameObject.Find("Indestructible Wall").transform);
                     }
+
+                    //Add tag "Wall" to the cube
+                    cube_ij.tag = "Wall";
                     
                 }
             }
