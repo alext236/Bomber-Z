@@ -76,10 +76,11 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    //Refactored into one function instead of 4 different repeating codes
     bool DoesRaycastHitWall(Vector3 originPos) {
         RaycastHit hit;
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
-        Ray newRay = new Ray(originPos, Vector3.down);
+        Ray newRay = new Ray(originPos, Vector3.down);      //Seems like Vector3.down works well
 
         if (Physics.Raycast(newRay, out hit, (originPosMirror - originPos).magnitude)) {
             Debug.DrawRay(originPos, Vector3.down, Color.red);
