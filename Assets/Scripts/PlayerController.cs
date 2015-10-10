@@ -21,7 +21,7 @@ public class PlayerController : MonoBehaviour {
     // Use this for initialization
     void Start() {
         planeInfo = FindObjectOfType<Playground>().gameObject;
-        PlacePlayerOnMap();
+        
     }
 
     //Find the first available free tile
@@ -45,6 +45,7 @@ public class PlayerController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        PlacePlayerOnMap();
         KeyboardMovement();
 
         if (Input.GetKeyDown(KeyCode.Space)) {

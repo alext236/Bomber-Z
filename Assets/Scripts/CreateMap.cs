@@ -229,10 +229,11 @@ public class CreateMap : MonoBehaviour {
     }
 	
     // Use this for initialization
-	void Awake () {
-        //Set N and M based on the size defined in the editor
+	void Start () {
+        //Automatically set N, M and Plane
         N = GetComponent<Playground>().width;
         M = GetComponent<Playground>().height;
+        plane = FindObjectOfType<Playground>().gameObject;
 
         myAreaDivider = new myDividedArea(new Vector2(1, 1), new Vector2(N - 2, M - 2), numberOfRandSamples);
         initializing_Map(N, M);
