@@ -16,13 +16,15 @@ public class PlayerController : MonoBehaviour {
     ArrayList myMap;
 
     // Use this for initialization
-    void Start() {
+    void Start() 
+    {
         planeInfo = FindObjectOfType<Playground>().gameObject;
         
     }
 
     //Find the first available free tile
-    Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize) {
+    Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize) 
+    {
         bool flag_continue = true;
         int index_i = 0;
         int index_j = 0;
@@ -45,13 +47,16 @@ public class PlayerController : MonoBehaviour {
         PlacePlayerOnMap();
         KeyboardMovement();
 
-        if (Input.GetKeyDown(KeyCode.Space)) {
+        if (Input.GetKeyDown(KeyCode.Space)) 
+        {
             SpawnBomb();
         }
     }
 
-    private void PlacePlayerOnMap() {
-        if (!flag_got_map_info) {
+    private void PlacePlayerOnMap() 
+    {
+        if (!flag_got_map_info) 
+        {
             myMapInfo = planeInfo.GetComponent<CreateMap>();
             myGridSize = myMapInfo.getGridSize();
             myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
@@ -73,14 +78,16 @@ public class PlayerController : MonoBehaviour {
     }
 
     //Refactored into one function instead of 4 different repeating codes
-    bool DoesRaycastHitWall(Vector3 originPos) {
+    bool DoesRaycastHitWall(Vector3 originPos) 
+    {
         RaycastHit hit;
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
         Ray newRay = new Ray(originPos, Vector3.down);      //Seems like Vector3.down works well
 
         if (Physics.Raycast(newRay, out hit, (originPosMirror - originPos).magnitude)) {
             Debug.DrawRay(originPos, Vector3.down, Color.red);
-            if (hit.transform.name != "Grass Playground") {
+            if (hit.transform.name != "Grass Playground") 
+            {
                 return true;
             }
         }
@@ -88,7 +95,8 @@ public class PlayerController : MonoBehaviour {
         return false;
     }
 
-    bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize) {
+    bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize) 
+    {
         //Draw a RayCast on lower left of player sprite
         Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
         if (DoesRaycastHitWall(p1)) {
@@ -156,11 +164,12 @@ public class PlayerController : MonoBehaviour {
         }
 
         GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
-
         if (GameObject.Find("Bomb Parent")) {
             GameObject parent = GameObject.Find("Bomb Parent");
             newBomb.transform.SetParent(parent.transform);
-        } else {
+        } 
+        else 
+        {
             GameObject parent = new GameObject("Bomb Parent");
             newBomb.transform.SetParent(parent.transform);
         } 

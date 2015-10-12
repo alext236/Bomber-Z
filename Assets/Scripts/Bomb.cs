@@ -18,18 +18,21 @@ public class Bomb : MonoBehaviour {
     private float distanceToNearestWall_back;
 
     public bool BombTriggered {
-        get {
+        get 
+        {
             return bombTriggered;
         }
 
-        set {
+        set 
+        {
             bombTriggered = value;
         }
     }
 
 
     // Use this for initialization
-    void Start() {
+    void Start() 
+    {
         distanceToNearestWall_left = length;
         distanceToNearestWall_right = length;
         distanceToNearestWall_forward = length;
@@ -37,7 +40,8 @@ public class Bomb : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
+    void Update() 
+    {
         CreateCollider();
     }
 
@@ -60,63 +64,70 @@ public class Bomb : MonoBehaviour {
         CreateFireParticles();
     }
     //Cut the length of fire to distance to nearest wall
-    void DefineFireLength(Transform transform, float nearestDistance) {        
+    void DefineFireLength(Transform transform, float nearestDistance, float iFireTime) ///////////////////////////////////////////////////////////////changed by Kourosh 
+    {        
         float fireLength = 0;
-        if (nearestDistance < length) {
+        if (nearestDistance < length * iFireTime) ////////////////////////////////////////////////////////////////////////////////////////////////////Added by Kourosh 
+        {
             fireLength = Mathf.RoundToInt(nearestDistance);
         }
-        else {
+        else 
+        {
             fireLength = length;
         }
         //startSpeed 2.5 equals one tile fire length, or 1 + 0.5 in tile length
         fireLength = (fireLength + 0.5f) * 2.5f / 1.5f;
         transform.GetComponent<ParticleSystem>().startSpeed = fireLength;
-
+        transform.GetComponent<ParticleSystem>().startLifetime = iFireTime;
     }
 
     private void CreateFireParticles() {
         GameObject fire = Instantiate(bombFirePrefab, transform.position, Quaternion.identity) as GameObject;
         //fire.transform.SetParent(transform);
 
-        foreach (Transform child in fire.transform) {
-            child.GetComponent<ParticleSystem>().startLifetime = fireTime;
-            
+        foreach (Transform child in fire.transform) 
+        {
             if (child.name == "Left") {
-                DefineFireLength(child, distanceToNearestWall_left);                
+                DefineFireLength(child, distanceToNearestWall_left, fireTime);
             }
 
             if (child.name == "Right") {
-                DefineFireLength(child, distanceToNearestWall_right);
+                DefineFireLength(child, distanceToNearestWall_right, fireTime);
             }
 
             if (child.name == "Forward") {
-                DefineFireLength(child, distanceToNearestWall_forward);
+                DefineFireLength(child, distanceToNearestWall_forward, fireTime);
             }
 
             if (child.name == "Back") {
-                DefineFireLength(child, distanceToNearestWall_back);
+                DefineFireLength(child, distanceToNearestWall_back, fireTime);
             }
         }
 
         Destroy(fire, fireTime + 1f);   //1s padding so the particles have time to die out before destroyed
     }
 
-    void GetDistanceToNearestWall(GameObject wall, Vector3 direction) {
+    float GetDistanceToNearestWall(GameObject wall, Vector3 direction) {
         if (direction == Vector3.left) {            
             distanceToNearestWall_left = Mathf.Abs(transform.position.x - wall.transform.position.x) - 1f;   //So the fire stops right before a wall         
+            return distanceToNearestWall_left;
         }
 
         if (direction == Vector3.right) {
             distanceToNearestWall_right = Mathf.Abs(transform.position.x - wall.transform.position.x) - 1f;
+            return distanceToNearestWall_right;
         }
 
         if (direction == Vector3.forward) {
             distanceToNearestWall_forward = Mathf.Abs(transform.position.z - wall.transform.position.z) - 1f;
+            return distanceToNearestWall_forward;
         }
 
         if (direction == Vector3.back) {
             distanceToNearestWall_back = Mathf.Abs(transform.position.z - wall.transform.position.z) - 1f;
+            return distanceToNearestWall_back;
         }
+        return 0f;
     }
 
     void DrawRaycast(Vector3 direction) {
@@ -124,9 +135,17 @@ public class Bomb : MonoBehaviour {
 
         Ray impactRay = new Ray(transform.position, direction);
         if (Physics.Raycast(impactRay, out hit, length)) {
-            if (hit.collider.tag == "Wall") {       //TODO: Change this tag to appropriate tag later
+            if (hit.collider.tag == "IndestructibleWall")
+            {
                 GetDistanceToNearestWall(hit.collider.gameObject, direction);
-                Destroy(hit.collider.gameObject);
+//                float ratio_real_planned = animation_length / (length * fireTime);
+//                Destroy(hit.collider.gameObject, ratio_real_planned * fireTime);
+            }
+            else if (hit.collider.tag == "Wall")/////////////////////////////////////////////////////////////////////////////////////////////////////////Added by Kourosh 
+            {// if the actual fire length is smaller than planned fire length then the time that fire reach to the object is the portion of the planned time
+                float animation_length = GetDistanceToNearestWall(hit.collider.gameObject, direction);
+                float ratio_real_planned = animation_length / (length * fireTime);
+                Destroy(hit.collider.gameObject, ratio_real_planned * fireTime);
             }
 
             //Bomb can explode other bombs

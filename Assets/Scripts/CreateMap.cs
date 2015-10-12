@@ -361,12 +361,14 @@ public class CreateMap : MonoBehaviour {
                     if (!GameObject.Find("Indestructible Wall")) {
                         GameObject newParent = new GameObject("Indestructible Wall");
                         cube_ij.transform.SetParent(newParent.transform);
-                    } else {
+                    } 
+                    else 
+                    {
                         cube_ij.transform.SetParent(GameObject.Find("Indestructible Wall").transform);
                     }
 
-                    //Add tag "Wall" to the cube
-                    cube_ij.tag = "Wall";
+                    //Add tag "IndestructibleWall" to the cube
+                    cube_ij.tag = "IndestructibleWall";
                     
                 }
             }
