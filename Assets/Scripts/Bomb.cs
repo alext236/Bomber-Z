@@ -5,12 +5,19 @@ public class Bomb : MonoBehaviour {
 
     [Range (1, 10)]
     public int length = 1;
-    public GameObject bombFirePrefab;
+    
     [Range(0.1f, 2f)]
+    [Tooltip("Duration the fire stays on screen")]
     public float fireTime;
+
+    [Range(1f, 5f)]
+    public float timeToExplode;
+
+    public GameObject bombFirePrefab;
 
     private bool hasCollider = false;
     private bool bombTriggered = false;
+    private Animator anim;
 
     private float distanceToNearestWall_left;
     private float distanceToNearestWall_right;
@@ -31,8 +38,14 @@ public class Bomb : MonoBehaviour {
 
 
     // Use this for initialization
-    void Start() 
-    {
+    void Start() {
+        SetDefaultDistance();
+        anim = GetComponent<Animator>();
+        Debug.Log(anim);
+        Invoke("StartExplosionAnimation", timeToExplode);
+    }
+
+    private void SetDefaultDistance() {
         distanceToNearestWall_left = length;
         distanceToNearestWall_right = length;
         distanceToNearestWall_forward = length;
@@ -47,10 +60,14 @@ public class Bomb : MonoBehaviour {
 
     //Used as animation event for now
     //TODO: trigger this with a timer
-    void BombExplode() {
+    void BombExplode() {        
         BombImpact();
         Destroy(gameObject);
 
+    }
+
+    void StartExplosionAnimation() {
+        anim.SetBool("BombExplode", true);
     }
 
     void BombImpact() {
@@ -146,6 +163,10 @@ public class Bomb : MonoBehaviour {
                 float animation_length = GetDistanceToNearestWall(hit.collider.gameObject, direction);
                 float ratio_real_planned = animation_length / (length * fireTime);
                 Destroy(hit.collider.gameObject, ratio_real_planned * fireTime);
+            }
+            else if (hit.collider.GetComponent<PlayerController>()) {
+                //Do something to the player
+                Debug.Log("The player is hit by the bomb");
             }
 
             //Bomb can explode other bombs
