@@ -41,7 +41,7 @@ public class Bomb : MonoBehaviour {
     void Start() {
         SetDefaultDistance();
         anim = GetComponent<Animator>();
-        Debug.Log(anim);
+        Debug.Log(anim);    //////////////Added by Tuan
         Invoke("StartExplosionAnimation", timeToExplode);
     }
 
@@ -65,7 +65,7 @@ public class Bomb : MonoBehaviour {
         Destroy(gameObject);
 
     }
-
+    //////////////// Add a new animation state to trigger explosion -- Added by Tuan
     void StartExplosionAnimation() {
         anim.SetBool("BombExplode", true);
     }

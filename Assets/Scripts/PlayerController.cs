@@ -5,6 +5,8 @@ public class PlayerController : MonoBehaviour {
 
     [Range(1f, 10f)]
     public float speed;
+    [Range(1, 10)]      /////////////////Add limit on bombs -- Added by Tuan
+    public int maxNumberOfBombs;
 
     public GameObject bomb;
 
@@ -72,7 +74,7 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    //Refactored into one function instead of 4 different repeating codes
+    //Refactored into one function instead of 4 different repeating codes -- Added by Tuan
     bool DoesRaycastHitWall(Vector3 originPos) {
         RaycastHit hit;
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
@@ -80,7 +82,7 @@ public class PlayerController : MonoBehaviour {
 
         if (Physics.Raycast(newRay, out hit, (originPosMirror - originPos).magnitude)) {
             Debug.DrawRay(originPos, Vector3.down, Color.red);
-            if (hit.transform.name == "Grass Playground" || hit.transform.name == "Player") {
+            if (hit.transform.name == "Grass Playground" || hit.transform.name == "Player") {   //////Temporary solution --Added by Tuan
                 return false;
 
             }
@@ -149,8 +151,13 @@ public class PlayerController : MonoBehaviour {
         Vector3 bombPosition = transform.position;
         bombPosition.x = Mathf.Round(bombPosition.x);
         bombPosition.z = Mathf.Round(bombPosition.z);
-
+        ////////////////////Add a limit to the number of bombs placed -- Added by Tuan
+        int count = 0;
         foreach (Bomb bombPlaced in FindObjectsOfType<Bomb>()) {
+            count++;
+            if (count >= maxNumberOfBombs) {
+                return;
+            }
             if (bombPlaced.transform.position == bombPosition) {
                 return;
             }
