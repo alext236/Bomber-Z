@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour {
     ArrayList last_bomb_pos;//Vector3
     ArrayList bombFireLength;//float
     ArrayList bombFireTime;//float
+
     // Use this for initialization
     void Start() 
     {

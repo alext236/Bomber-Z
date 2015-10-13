@@ -6,9 +6,10 @@ public class Bomb : MonoBehaviour {
     [Range (1, 10)]
     public int length = 1;
     
-//    [Range(0.1f, 2f)]
-//    [Tooltip("Duration the fire stays on screen")]
-    float fireTime = 1f;
+    [Range(0.1f, 2f)]
+    [Tooltip("Duration the fire stays on screen")]
+    //fireTime has a definite effect on the length of the bomb fire, so I'd rather keep it public so we can mess around in the editor
+    public float fireTime = 0.7f;
 
     [Range(1f, 5f)]
     public float timeToExplode;
