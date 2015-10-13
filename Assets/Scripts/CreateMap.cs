@@ -355,8 +355,11 @@ public class CreateMap : MonoBehaviour {
                     GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                     cube_ij.transform.localScale = iGridSize;
-                    myGameObjects.Add(cube_ij);
 
+
+                    NavMeshObstacle mcube_obstacle = cube_ij.AddComponent<NavMeshObstacle>();
+                    mcube_obstacle.size = iGridSize / 5 + new Vector3(0.01f, 0.01f, 0.01f);
+                    mcube_obstacle.carving = true;
                     //Sort all the cube into appropriate parent
                     if (!GameObject.Find("Indestructible Wall")) {
                         GameObject newParent = new GameObject("Indestructible Wall");
@@ -369,7 +372,7 @@ public class CreateMap : MonoBehaviour {
 
                     //Add tag "IndestructibleWall" to the cube
                     cube_ij.tag = "IndestructibleWall";
-                    
+                    myGameObjects.Add(cube_ij);
                 }
             }
         }

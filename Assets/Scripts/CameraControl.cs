@@ -16,7 +16,8 @@ public class CameraControl : MonoBehaviour {    //Camera keeps a definite distan
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update () 
+    {
         transform.position = player.transform.position - offset;
 	}
 }
