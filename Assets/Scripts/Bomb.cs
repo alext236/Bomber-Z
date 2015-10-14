@@ -14,6 +14,7 @@ public class Bomb : MonoBehaviour {
     public float timeToExplode;
 
     public GameObject bombFirePrefab;
+    public AudioClip explodeSound;
 
     private bool hasCollider = false;
     private bool bombTriggered = false;
@@ -65,7 +66,8 @@ public class Bomb : MonoBehaviour {
     //Used as animation event for now
     //TODO: trigger this with a timer
     void BombExplode() 
-    {        
+    {
+        AudioSource.PlayClipAtPoint(explodeSound, transform.position);
         BombImpact();
         if (flagHitPlayer)
         {

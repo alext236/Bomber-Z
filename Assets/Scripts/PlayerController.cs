@@ -9,6 +9,9 @@ public class PlayerController : MonoBehaviour {
     public int maxNumberOfBombs;
 
     public GameObject bomb;
+    public AudioClip footStepSound;
+    public AudioClip placeBombSound;
+    public AudioClip playerHurtSound;
 
     private GameObject planeInfo;
     bool flag_got_map_info = false;
@@ -135,6 +138,8 @@ public class PlayerController : MonoBehaviour {
                             {
                                 //Do something to the player
                                 Debug.Log("The player is hit by the bomb ");
+                                AudioSource.PlayClipAtPoint(playerHurtSound, transform.position);
+
                                 mHit_flag = true;
                                 check_hit_bomb.Clear();
                                 delta_time.Clear();
@@ -252,8 +257,8 @@ public class PlayerController : MonoBehaviour {
 
         Vector3 targetPos = transform.position;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) 
-        {
-            targetPos -= moveLeftRight;
+        {            
+            targetPos -= moveLeftRight;            
         }
 
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) 
@@ -273,8 +278,15 @@ public class PlayerController : MonoBehaviour {
 
         if (isInsideFreeSpace(targetPos, new Vector3(this.transform.localScale[0] / 2, 0f, this.transform.localScale[2] / 10))) 
         {
+            
             transform.position = targetPos;
         }
+    }
+
+    //used as an animation event once we have movement animation
+    void PlayFootstepSound()
+    {
+        AudioSource.PlayClipAtPoint(footStepSound, transform.position);
     }
 
     void SpawnBomb() 
@@ -300,6 +312,7 @@ public class PlayerController : MonoBehaviour {
 
         //Sort the bombs to one parent folder to be neat
         GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
+        AudioSource.PlayClipAtPoint(placeBombSound, newBomb.transform.position);
         if (GameObject.Find("Bomb Parent")) 
         {
             newBomb.transform.SetParent(GameObject.Find("Bomb Parent").transform);
