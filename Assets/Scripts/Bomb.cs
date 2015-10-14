@@ -6,10 +6,9 @@ public class Bomb : MonoBehaviour {
     [Range (1, 10)]
     public int length = 1;
     
-    [Range(0.1f, 2f)]
-    [Tooltip("Duration the fire stays on screen")]
-    //fireTime has a definite effect on the length of the bomb fire, so I'd rather keep it public so we can mess around in the editor
-    public float fireTime = 0.7f;
+//    [Range(0.1f, 2f)]
+//    [Tooltip("Duration the fire stays on screen")]
+    float fireTime = 1f;
 
     [Range(1f, 5f)]
     public float timeToExplode;
@@ -69,7 +68,11 @@ public class Bomb : MonoBehaviour {
     {        
         BombImpact();
         if (flagHitPlayer)
-            FindObjectOfType<PlayerController>().setBombInfo(this.transform.position, fireTime, length * 2.5f / 1.5f);
+        {
+            Vector3 mgrid_size = FindObjectOfType<CreateMap>().getGridSize();
+            float max_size = Mathf.Max(mgrid_size[0],mgrid_size[2]);
+            FindObjectOfType<PlayerController>().setBombInfo(this.transform.position, fireTime, length * (max_size) + max_size/2);
+        }
         Destroy(gameObject);
 
     }
@@ -87,11 +90,12 @@ public class Bomb : MonoBehaviour {
         DrawRaycast(Vector3.right);
         DrawRaycast(Vector3.forward);
         DrawRaycast(Vector3.back);
+        DrawRaycast(Vector3.down);
         //Vector3.down
         CreateFireParticles();
     }
     //Cut the length of fire to distance to nearest wall
-    void DefineFireLength(Transform transform, float nearestDistance, float iFireTime) 
+    void DefineFireLength(Transform transform, float nearestDistance, float iFireTime, float grid_size) 
     {        
         float fireLength = 0;
         if (nearestDistance < length * iFireTime) 
@@ -103,7 +107,8 @@ public class Bomb : MonoBehaviour {
             fireLength = length;
         }
         //startSpeed 2.5 equals one tile fire length, or 1 + 0.5 in tile length
-        fireLength = (fireLength) *2.5f / 1.5f;
+        
+        fireLength = (10.0f/9.0f)*((fireLength)  * grid_size + grid_size/2);
         transform.GetComponent<ParticleSystem>().startSpeed = fireLength;
         transform.GetComponent<ParticleSystem>().startLifetime = iFireTime;
     }
@@ -111,23 +116,23 @@ public class Bomb : MonoBehaviour {
     private void CreateFireParticles() {
         GameObject fire = Instantiate(bombFirePrefab, transform.position, Quaternion.identity) as GameObject;
         //fire.transform.SetParent(transform);
-
+        Vector3 mgrid_size = FindObjectOfType<CreateMap>().getGridSize();
         foreach (Transform child in fire.transform) 
         {
             if (child.name == "Left") {
-                DefineFireLength(child, distanceToNearestWall_left, fireTime);
+                DefineFireLength(child, distanceToNearestWall_left, fireTime, mgrid_size[0]);
             }
 
             if (child.name == "Right") {
-                DefineFireLength(child, distanceToNearestWall_right, fireTime);
+                DefineFireLength(child, distanceToNearestWall_right, fireTime, mgrid_size[0]);
             }
 
             if (child.name == "Forward") {
-                DefineFireLength(child, distanceToNearestWall_forward, fireTime);
+                DefineFireLength(child, distanceToNearestWall_forward, fireTime, mgrid_size[2]);
             }
 
             if (child.name == "Back") {
-                DefineFireLength(child, distanceToNearestWall_back, fireTime);
+                DefineFireLength(child, distanceToNearestWall_back, fireTime, mgrid_size[2]);
             }
         }
 
@@ -164,8 +169,16 @@ public class Bomb : MonoBehaviour {
 
     void DrawRaycast(Vector3 direction) 
     {
-        Ray impactRay = new Ray(transform.position - direction, direction);
-        RaycastHit[] hit = Physics.RaycastAll(impactRay, length * fireTime + direction.magnitude);
+        Vector3 mgrid_size = FindObjectOfType<CreateMap>().getGridSize();
+        float max_size = Mathf.Max(mgrid_size[0], mgrid_size[2]);
+        Vector3 pos = transform.position;
+        if (direction == Vector3.down)
+            pos -= Vector3.down;
+        float dis = (length * max_size + max_size/2) * fireTime;
+        Ray impactRay = new Ray(pos, direction);
+
+        RaycastHit[] hit = Physics.RaycastAll(impactRay, dis);
+        Debug.DrawLine(pos + new Vector3(0,1,0), new Vector3(0,1,0) + pos + direction * dis, Color.red);
         bool flag_continue = true;
         for (int i = 0; i < hit.Length && flag_continue; i++)
         {
@@ -188,8 +201,6 @@ public class Bomb : MonoBehaviour {
                 flagHitPlayer = true;
                 //Do something to the player
                 playerDir = direction;
-                //float givenDis = GetDistanceToPlayer(hit[i].collider.gameObject, );
-                //Debug.Log("The player is hit by the bomb " + givenDis.ToString() + " " + ((givenDis) / fireTime).ToString());
             }
 
             //Bomb can explode other bombs

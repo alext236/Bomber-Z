@@ -22,7 +22,6 @@ public class PlayerController : MonoBehaviour {
     ArrayList last_bomb_pos;//Vector3
     ArrayList bombFireLength;//float
     ArrayList bombFireTime;//float
-
     // Use this for initialization
     void Start() 
     {
@@ -75,7 +74,7 @@ public class PlayerController : MonoBehaviour {
     public void setBombInfo(Vector3 iBombPos, float iFireTime, float iMaxLength)
     {
         check_hit_bomb.Add(true);
-        delta_time.Add(0.2f);
+        delta_time.Add(0.0f);
         last_bomb_pos.Add(iBombPos);
         bombFireLength.Add(iMaxLength);
         bombFireTime.Add(iFireTime);
@@ -93,12 +92,16 @@ public class PlayerController : MonoBehaviour {
                 return Vector3.right;
             case 3:
                 return Vector3.left;
+            case 4:
+                return Vector3.down;
         }
         return Vector3.up;
     }
 
     private void checkBombHitPlayer()
     {
+        if (check_hit_bomb == null)
+            return;
         if (check_hit_bomb.Count > 0)
         {
             bool mHit_flag = false;
@@ -115,23 +118,35 @@ public class PlayerController : MonoBehaviour {
 
                 if (dis <= (float)bombFireLength[i])
                 {
-                    for (int j = 0; j < 4 && !mHit_flag; j++)
+                    for (int j = 0; j < 5 && !mHit_flag; j++)
                     {
                         Vector3 mDir = getDirection(j);
-                        Ray impactRay = new Ray((Vector3)last_bomb_pos[i] - mDir, mDir);
-                        RaycastHit hit;
-                        if (Physics.Raycast(impactRay, out hit, ((float)bombFireLength[i] + mDir.magnitude) * (float)delta_time[i]))
+                        Vector3 pos = (Vector3)last_bomb_pos[i];
+                        if (mDir == Vector3.down)
+                            pos -= mDir;
+                        float ray_dis = ((float)bombFireLength[i]) * (float)delta_time[i];
+                        Ray impactRay = new Ray(pos, mDir);
+                        RaycastHit[] hit = Physics.RaycastAll(impactRay, ray_dis);
+                        bool flag_continue_on_ray = true;
+                        for (int k = 0; k < hit.Length && flag_continue_on_ray; k++)
                         {
-                            //Do something to the player
-                            Debug.Log("The player is hit by the bomb ");
-
-                            //check_hit_bomb = false;
-                            mHit_flag = true;
-                            check_hit_bomb.Clear();
-                            delta_time.Clear();
-                            last_bomb_pos.Clear();
-                            bombFireLength.Clear();
-                            bombFireTime.Clear();
+                            Debug.DrawLine(pos, pos + mDir * ray_dis * (float)delta_time[i], Color.red);
+                            if (hit[k].transform.name == "Player")
+                            {
+                                //Do something to the player
+                                Debug.Log("The player is hit by the bomb ");
+                                mHit_flag = true;
+                                check_hit_bomb.Clear();
+                                delta_time.Clear();
+                                last_bomb_pos.Clear();
+                                bombFireLength.Clear();
+                                bombFireTime.Clear();
+                                flag_continue_on_ray = false;
+                            }
+                            if (hit[k].transform.name == "Cube")
+                            {
+                                flag_continue_on_ray = false;
+                            }
                         }
                     }
                 }
