@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour {
     public AudioClip placeBombSound;
     public AudioClip playerHurtSound;
 
+	private Animator anim;
+
     private GameObject planeInfo;
     private ArrayList m_enemy_i_script;
     
@@ -58,6 +60,9 @@ public class PlayerController : MonoBehaviour {
         m_enemy_i_script = new ArrayList();
         m_enemy_i_script.Add(GameObject.Find("Enemy").GetComponent<EnemyScript>());
         m_enemy_i_script.Add(GameObject.Find("Enemy 1").GetComponent<EnemyScript>());
+
+		//For setting up anim
+		anim = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -365,8 +370,15 @@ public class PlayerController : MonoBehaviour {
         Vector3 targetPos = transform.position;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) 
         {            
-            targetPos -= moveLeftRight;            
+			anim.SetBool("LeftMovement", true);
+			targetPos -= moveLeftRight;            
         }
+
+		if (Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.LeftArrow)) 
+		{            
+			anim.SetBool("LeftMovement", false);
+
+		}
 
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) 
         {
