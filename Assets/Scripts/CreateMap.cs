@@ -5,7 +5,7 @@ using System.IO;
 
 public class CreateMap : MonoBehaviour {
     public enum myDividerType { X, Y };
-    public enum GridType { inDestructible = 1, Free = 0 };
+    public enum GridType { inDestructible = 1, Free = 0, Destructible = 2 };
     public class myDividedArea
     {
         public myDividedArea(Vector2 iFirstBorder, Vector2 iEndBorder, int iNumberOfRandSamples)
@@ -240,13 +240,13 @@ public class CreateMap : MonoBehaviour {
         myAreaDivider.myDivideAreaFunc(myMap, myAreaDivider);
         myWriteMap();
         myGameObjects = new ArrayList();
-//        RectTransform plane_transform = plane.GetComponent<RectTransform>();
+
         Transform mPlane_Transform = plane.transform;
         Vector3 plane_3d_size = mPlane_Transform.localScale;
         grid_size = new Vector3(plane_3d_size[0] / N, 0.5f, plane_3d_size[2] / M);
         first_cube_location = mPlane_Transform.localPosition - new Vector3(plane_3d_size[0] / 2, 0f, plane_3d_size[2] / 2)
             + new Vector3(plane_3d_size[0] / (2 * N), 0f, plane_3d_size[2] / (2 * M));
-        myCreateScene(grid_size, first_cube_location);
+        myCreateScene(grid_size, first_cube_location, 100);
     }
 	
 	// Update is called once per frame
@@ -342,24 +342,24 @@ public class CreateMap : MonoBehaviour {
         m_writer.Close();
     }
 
-    void myCreateScene(Vector3 iGridSize, Vector3 iLocation)
+    void myCreateScene(Vector3 iGridSize, Vector3 iLocation, int numberOfBox)
     {
+        
         Vector3 d_pos = new Vector3(iLocation[0], iLocation[1] + iGridSize[1] / 2, iLocation[2]);
         for (int j = 0; j < M; j++)
         {
             for (int i = 0; i < N; i++)
             {
-                if (myAreaDivider.getMapVal(myMap, i, j) == 1)
+                if (myAreaDivider.getMapVal(myMap, i, j) == (int)GridType.inDestructible)
                 {
                     //Later Instantiate here a wall prefab instead of a simple cube
                     GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                     cube_ij.transform.localScale = iGridSize;
-
-
-                    NavMeshObstacle mcube_obstacle = cube_ij.AddComponent<NavMeshObstacle>();
-                    mcube_obstacle.size = iGridSize / 5 + new Vector3(0.01f, 0.01f, 0.01f);
-                    mcube_obstacle.carving = true;
+                    //cube_ij.isStatic = true;
+                    //NavMeshObstacle mcube_obstacle = cube_ij.AddComponent<NavMeshObstacle>();
+                    //mcube_obstacle.size = iGridSize / 5 + new Vector3(0.05f, 0.05f, 0.05f);
+                    //mcube_obstacle.carving = true;
                     //Sort all the cube into appropriate parent
                     if (!GameObject.Find("Indestructible Wall")) {
                         GameObject newParent = new GameObject("Indestructible Wall");
@@ -377,5 +377,38 @@ public class CreateMap : MonoBehaviour {
             }
         }
 
+        for (int k = 0; k < numberOfBox; k++)
+        {
+            int i = UnityEngine.Random.Range((int)0, (int)N);
+            int j = UnityEngine.Random.Range((int)0, (int)M);
+            if (myAreaDivider.getMapVal(myMap, i, j) == (int)GridType.Free)
+            {
+                myAreaDivider.setMapVal(myMap, i, j, (int)GridType.Destructible);
+                GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
+                cube_ij.transform.localScale = iGridSize;
+
+                //NavMeshObstacle mcube_obstacle = cube_ij.AddComponent<NavMeshObstacle>();
+                //mcube_obstacle.size = iGridSize / 5 + new Vector3(0.01f, 0.01f, 0.01f);
+                //mcube_obstacle.carving = true;
+                //Sort all the cube into appropriate parent
+                if (!GameObject.Find("Wall"))
+                {
+                    GameObject newParent = new GameObject("Wall");
+                    cube_ij.transform.SetParent(newParent.transform);
+                }
+                else
+                {
+                    cube_ij.transform.SetParent(GameObject.Find("Wall").transform);
+                }
+
+                //Add tag "Wall" to the cube
+                cube_ij.tag = "Wall";
+                Material newMaterial = new Material((Shader.Find("Diffuse")));
+                cube_ij.GetComponent<MeshRenderer>().material = newMaterial;
+                //cube_ij.AddComponent<Material>();
+                myGameObjects.Add(cube_ij);
+            }
+        }
     }
 }

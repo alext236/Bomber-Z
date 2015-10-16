@@ -3,6 +3,20 @@ using System.Collections;
 
 public class Bomb : MonoBehaviour {
 
+    public class mySortClass : IComparer
+    {
+        int IComparer.Compare(object x, object y)
+        {
+            RaycastHit mX = (RaycastHit)x;
+            RaycastHit mY = (RaycastHit)y;
+            if (mY.distance > mX.distance)
+                return -1;
+            else
+                return 1;
+        }
+
+    }
+
     [Range (1, 10)]
     public int length = 1;
     
@@ -25,8 +39,8 @@ public class Bomb : MonoBehaviour {
     private float distanceToNearestWall_forward;
     private float distanceToNearestWall_back;
 
-    Vector3 playerDir;
-    bool flagHitPlayer = false;
+    bool flagCheckPlayer = false;
+    bool flagCheckEnemy = false;
     public bool BombTriggered 
     {
         get 
@@ -40,17 +54,21 @@ public class Bomb : MonoBehaviour {
         }
     }
 
-
+    private ArrayList m_enemies;
     // Use this for initialization
     void Start() 
     {
+        m_enemies = new ArrayList();
+        m_enemies.Add(GameObject.Find("Enemy"));
+        m_enemies.Add(GameObject.Find("Enemy 1"));
         SetDefaultDistance();
         anim = GetComponent<Animator>();
         Debug.Log(anim);
         Invoke("StartExplosionAnimation", timeToExplode);
     }
 
-    private void SetDefaultDistance() {
+    private void SetDefaultDistance() 
+    {
         distanceToNearestWall_left = length;
         distanceToNearestWall_right = length;
         distanceToNearestWall_forward = length;
@@ -64,21 +82,32 @@ public class Bomb : MonoBehaviour {
     }
 
     //Used as animation event for now
-    //TODO: trigger this with a timer
     void BombExplode() 
     {
         AudioSource.PlayClipAtPoint(explodeSound, transform.position);
         BombImpact();
-        if (flagHitPlayer)
+        if (flagCheckPlayer || flagCheckEnemy)
         {
             Vector3 mgrid_size = FindObjectOfType<CreateMap>().getGridSize();
             float max_size = Mathf.Max(mgrid_size[0],mgrid_size[2]);
-            FindObjectOfType<PlayerController>().setBombInfo(this.transform.position, fireTime, length * (max_size) + max_size/2);
+            if (flagCheckPlayer)
+            {
+                FindObjectOfType<PlayerController>().setBombInfo(this.transform.position, fireTime, length * (max_size) + max_size / 2);
+            }
+            if (flagCheckEnemy)
+            {
+                for (int i = 0; i < m_enemies.Count; i++)
+                {
+                    GameObject m_enemy_i = (GameObject)m_enemies[i];
+                    m_enemy_i.GetComponent<EnemyScript>().setBombInfo(this.transform.position, fireTime, length * (max_size) + max_size / 2);
+                }
+            }
         }
+        
         Destroy(gameObject);
 
     }
-    //////////////// Add a new animation state to trigger explosion -- Added by Tuan
+
     void StartExplosionAnimation() 
     {
         anim.SetBool("BombExplode", true);
@@ -93,7 +122,7 @@ public class Bomb : MonoBehaviour {
         DrawRaycast(Vector3.forward);
         DrawRaycast(Vector3.back);
         DrawRaycast(Vector3.down);
-        //Vector3.down
+
         CreateFireParticles();
     }
     //Cut the length of fire to distance to nearest wall
@@ -108,14 +137,14 @@ public class Bomb : MonoBehaviour {
         {
             fireLength = length;
         }
-        //startSpeed 2.5 equals one tile fire length, or 1 + 0.5 in tile length
         
         fireLength = (10.0f/9.0f)*((fireLength)  * grid_size + grid_size/2);
         transform.GetComponent<ParticleSystem>().startSpeed = fireLength;
         transform.GetComponent<ParticleSystem>().startLifetime = iFireTime;
     }
 
-    private void CreateFireParticles() {
+    private void CreateFireParticles() 
+    {
         GameObject fire = Instantiate(bombFirePrefab, transform.position, Quaternion.identity) as GameObject;
         //fire.transform.SetParent(transform);
         Vector3 mgrid_size = FindObjectOfType<CreateMap>().getGridSize();
@@ -175,41 +204,55 @@ public class Bomb : MonoBehaviour {
         float max_size = Mathf.Max(mgrid_size[0], mgrid_size[2]);
         Vector3 pos = transform.position;
         if (direction == Vector3.down)
-            pos -= Vector3.down;
+            pos -= 3*Vector3.down;
         float dis = (length * max_size + max_size/2) * fireTime;
         Ray impactRay = new Ray(pos, direction);
 
         RaycastHit[] hit = Physics.RaycastAll(impactRay, dis);
+        ArrayList hit_arr = new ArrayList();
+        for (int i = 0; i < hit.Length; i++)
+            hit_arr.Add(hit[i]);
+        if (hit_arr.Count > 0)
+        {
+            IComparer myComparer = new mySortClass();
+            hit_arr.Sort(myComparer);
+        }
+
         Debug.DrawLine(pos + new Vector3(0,1,0), new Vector3(0,1,0) + pos + direction * dis, Color.red);
         bool flag_continue = true;
-        for (int i = 0; i < hit.Length && flag_continue; i++)
+        for (int i = 0; i < hit_arr.Count && flag_continue; i++)
         {
-            if (hit[i].collider.tag == "IndestructibleWall")
+            RaycastHit m_hit = (RaycastHit)hit_arr[i];
+            if (m_hit.collider.tag == "IndestructibleWall")
             {
-                GetDistanceToNearestWall(hit[i].collider.gameObject, direction);
-                flag_continue = false;
-                //                float ratio_real_planned = animation_length / (length * fireTime);
-                //                Destroy(hit.collider.gameObject, ratio_real_planned * fireTime);
-            }
-            else if (hit[i].collider.tag == "Wall")
-            {// if the actual fire length is smaller than planned fire length then the time that fire reach to the object is the portion of the planned time
-                float animation_length = GetDistanceToNearestWall(hit[i].collider.gameObject, direction);
-                float ratio_real_planned = animation_length / (length * fireTime);
-                Destroy(hit[i].collider.gameObject, ratio_real_planned * fireTime);
+                GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
                 flag_continue = false;
             }
-            else if (hit[i].collider.GetComponent<PlayerController>())
+            else if (m_hit.collider.tag == "Wall")
             {
-                flagHitPlayer = true;
-                //Do something to the player
-                playerDir = direction;
-            }
+                // if the actual fire length is smaller than planned fire length then the time that fire reach to the object is the portion of the planned time
+                float animation_length = GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
+                animation_length = ((animation_length) * max_size + max_size / 2);
+                float planned_length = ((length) * max_size + max_size / 2);
+                float ratio_real_planned = animation_length / (planned_length * fireTime);
 
+                for (int j = 0; j < m_enemies.Count; j++)
+                {
+                    GameObject m_enemy_j = (GameObject)m_enemies[j];
+                    m_enemy_j.GetComponent<EnemyScript>().mUpdateMyMap(m_hit.collider.gameObject.transform.position);
+                }
+
+                Destroy(m_hit.collider.gameObject, ratio_real_planned * fireTime);
+                flag_continue = false;
+            }
+            flagCheckPlayer = true;
+            flagCheckEnemy = true;
             //Bomb can explode other bombs
-            if (hit[i].collider.GetComponent<Bomb>())
+            if (m_hit.collider.GetComponent<Bomb>())
             {
-                Bomb bomb = hit[i].collider.GetComponent<Bomb>();
-                if (!bomb.BombTriggered) //Trigger only the bomb that has not been triggered
+                Bomb bomb = m_hit.collider.GetComponent<Bomb>();
+                //Trigger only the bomb that has not been triggered
+                if (!bomb.BombTriggered) 
                 {
                     bomb.BombExplode();
                 }
@@ -218,23 +261,23 @@ public class Bomb : MonoBehaviour {
         }
     }
 
-    void CreateCollider() {
-        //only create collider after player is >(a tile) away from where the bomb is spawned
-        //so that player can move away from the bomb when first placing it but cannot step back on the bomb
+    void CreateCollider() 
+    {
         //now assume a tile grid size is (1, y, 1)
-        if (!hasCollider) {
-            PlayerController player = FindObjectOfType<PlayerController>();
-
-            float distance_x = player.transform.position.x - transform.position.x;
-            float distance_z = player.transform.position.z - transform.position.z;
-            CreateMap myMap = FindObjectOfType<CreateMap>();
-
-            if (Mathf.Abs(distance_x) > myMap.getGridSize().x || Mathf.Abs(distance_z) > myMap.getGridSize().z) {
-                BoxCollider newCollider = gameObject.AddComponent<BoxCollider>();
-                newCollider.center = Vector3.zero;
-                newCollider.size = Vector3.one;
-                hasCollider = true;
+        if (!hasCollider) 
+        {
+            CreateMap mMap = FindObjectOfType<CreateMap>();
+            Vector3 myGridSize = mMap.getGridSize();
+            PlayerController myPlayer = FindObjectOfType<PlayerController>();
+            Vector3 dis_to_bomb = (myPlayer.transform.position - transform.position);
+            if (Mathf.Abs(dis_to_bomb[0]) < myGridSize[0] && Mathf.Abs(dis_to_bomb[2]) < myGridSize[2])
+            {
+                myPlayer.addEscapingTilePos(this.transform.position);
             }
+            BoxCollider newCollider = gameObject.AddComponent<BoxCollider>();
+            newCollider.center = Vector3.zero;
+            newCollider.size = Vector3.one;
+            hasCollider = true;
         }
     }
 }
