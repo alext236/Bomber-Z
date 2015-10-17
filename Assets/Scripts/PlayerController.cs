@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour
+{
 
     public class mySortClass : IComparer
     {
@@ -22,15 +23,15 @@ public class PlayerController : MonoBehaviour {
     public int maxNumberOfBombs;
 
     public GameObject bomb;
-    public AudioClip footStepSound;
+    public AudioClip[] footStepSound;
     public AudioClip placeBombSound;
     public AudioClip playerHurtSound;
 
-	private Animator anim;
+    private Animator anim;
 
     private GameObject planeInfo;
     private ArrayList m_enemy_i_script;
-    
+
     bool flag_got_map_info = false;
     CreateMap myMapInfo;
     Vector3 myGridSize;
@@ -47,7 +48,7 @@ public class PlayerController : MonoBehaviour {
     //bomb escaping
     Vector3 EscapeTileBombPos;
     // Use this for initialization
-    void Start() 
+    void Start()
     {
         delta_time = new ArrayList();
         check_hit_bomb = new ArrayList();
@@ -61,17 +62,17 @@ public class PlayerController : MonoBehaviour {
         m_enemy_i_script.Add(GameObject.Find("Enemy").GetComponent<EnemyScript>());
         m_enemy_i_script.Add(GameObject.Find("Enemy 1").GetComponent<EnemyScript>());
 
-		//For setting up anim
-		anim = GetComponent<Animator>();
+        //For setting up anim
+        anim = GetComponent<Animator>();
     }
 
     // Update is called once per frame
-    void Update() 
+    void Update()
     {
         PlacePlayerOnMapAndGetInfo();
         KeyboardMovement();
 
-        if (Input.GetKeyDown(KeyCode.Space)) 
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             SpawnBomb();
         }
@@ -88,7 +89,7 @@ public class PlayerController : MonoBehaviour {
         }
         for (int i = 0; i < m_enemy_i_script.Count; i++)
         {
-            ((EnemyScript)m_enemy_i_script[i]).setTargetPos(this.transform.position);
+            ((EnemyScript) m_enemy_i_script[i]).setTargetPos(this.transform.position);
         }
     }
 
@@ -104,7 +105,7 @@ public class PlayerController : MonoBehaviour {
             for (int j = 0; j < iMap_col.Count && flag_continue; j++)
             {
                 int val_ij = (int)iMap_col[j];
-                if (val_ij == (int)CreateMap.GridType.Free)
+                if (val_ij == (int) CreateMap.GridType.Free)
                 {
                     flag_continue = false;
                     index_i = i;
@@ -132,7 +133,7 @@ public class PlayerController : MonoBehaviour {
         check_directions_forEachBomb.Add(new ArrayList());
         for (int i = 0; i < 5; i++)
         {
-            ((ArrayList)check_directions_forEachBomb[check_directions_forEachBomb.Count - 1]).Add(true);
+            ((ArrayList) check_directions_forEachBomb[check_directions_forEachBomb.Count - 1]).Add(true);
         }
 
         //delta_time
@@ -191,8 +192,8 @@ public class PlayerController : MonoBehaviour {
             bool mHit_flag = false;
             for (int i = 0; i < check_hit_bomb.Count && !mHit_flag; i++)
             {
-                delta_time[i] = (float)(delta_time[i]) + Time.deltaTime;
-                if ((float)(delta_time[i]) > (float)(bombFireTime[i]))
+                delta_time[i] = (float) (delta_time[i]) + Time.deltaTime;
+                if ((float) (delta_time[i]) > (float) (bombFireTime[i]))
                 {
                     check_hit_bomb[i] = false;
                 }
@@ -200,11 +201,11 @@ public class PlayerController : MonoBehaviour {
                 Vector3 p_pos = transform.position;
                 float dis = (p_pos - (Vector3)last_bomb_pos[i]).magnitude;
 
-                if (dis <= (float)bombFireLength[i] && (bool)check_hit_bomb[i])
+                if (dis <= (float) bombFireLength[i] && (bool) check_hit_bomb[i])
                 {
                     for (int j = 0; j < 5 && !mHit_flag; j++)
                     {
-                        if ((bool)((ArrayList)check_directions_forEachBomb[i])[j])
+                        if ((bool) ((ArrayList) check_directions_forEachBomb[i])[j])
                         {
                             //cast rays on different directions
                             Vector3 mDir = getDirection(j);
@@ -229,7 +230,7 @@ public class PlayerController : MonoBehaviour {
                             for (int k = 0; k < hit_arr.Count && flag_continue_on_ray; k++)
                             {
                                 RaycastHit m_hit = (RaycastHit)hit_arr[k];
-                                Debug.DrawLine(pos, pos + mDir * ray_dis * (float)delta_time[i], Color.red);
+                                Debug.DrawLine(pos, pos + mDir * ray_dis * (float) delta_time[i], Color.red);
                                 if (m_hit.transform.name == "Player")
                                 {
                                     //Do something to the player
@@ -243,7 +244,7 @@ public class PlayerController : MonoBehaviour {
                                 if (m_hit.transform.name == "Cube")
                                 {
                                     flag_continue_on_ray = false;
-                                    ((ArrayList)check_directions_forEachBomb[i])[j] = false;
+                                    ((ArrayList) check_directions_forEachBomb[i])[j] = false;
                                 }
                             }
                         }//if direction j of bomb i
@@ -253,7 +254,7 @@ public class PlayerController : MonoBehaviour {
 
             for (int i = 0; i < check_hit_bomb.Count; i++)
             {
-                if (!(bool)(check_hit_bomb[i]))
+                if (!(bool) (check_hit_bomb[i]))
                 {
                     check_hit_bomb.RemoveAt(i);
                     delta_time.RemoveAt(i);
@@ -264,15 +265,15 @@ public class PlayerController : MonoBehaviour {
                     i--;
                 }
             }
-            
+
             if (mHit_flag)
                 this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize) + new Vector3(0f, transform.position[1], 0f);
         }
     }
 
-    private void PlacePlayerOnMapAndGetInfo() 
+    private void PlacePlayerOnMapAndGetInfo()
     {
-        if (!flag_got_map_info) 
+        if (!flag_got_map_info)
         {
             myMapInfo = planeInfo.GetComponent<CreateMap>();
             myGridSize = myMapInfo.getGridSize();
@@ -294,13 +295,13 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    bool DoesRaycastHitObject(Vector3 originPos, Vector3 iPos, Vector3 iLastPos) 
+    bool DoesRaycastHitObject(Vector3 originPos, Vector3 iPos, Vector3 iLastPos)
     {
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
         Ray newRay = new Ray(originPos, Vector3.down);      //Seems like Vector3.down works well
 
         RaycastHit[] hit = Physics.RaycastAll(newRay, (originPosMirror - originPos).magnitude);
-        for (int i=0; i < hit.Length; i++) 
+        for (int i = 0; i < hit.Length; i++)
         {
             Debug.DrawRay(originPos, Vector3.down, Color.red);
             if (hit[i].transform.name == "Cube") //wall or indestructible wall
@@ -327,33 +328,33 @@ public class PlayerController : MonoBehaviour {
         return false;
     }
 
-    bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize, Vector3 iDisplacement) 
+    bool isInsideFreeSpace(Vector3 iPos, Vector3 iPlayerSize, Vector3 iDisplacement)
     {
         Vector3 last_pos = iPos - iDisplacement;
         //Draw a RayCast on lower left of player sprite
         Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos)) 
+        if (DoesRaycastHitObject(p1, iPos, last_pos))
         {
             return false;
         }
 
         //Draw a RayCast on upper left of player sprite
         p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos)) 
+        if (DoesRaycastHitObject(p1, iPos, last_pos))
         {
             return false;
         }
 
         //Draw a RayCast on lower right of player sprite
         p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos)) 
+        if (DoesRaycastHitObject(p1, iPos, last_pos))
         {
             return false;
         }
 
         //Draw a RayCast on upper right of player sprite
         p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos)) 
+        if (DoesRaycastHitObject(p1, iPos, last_pos))
         {
             return false;
         }
@@ -361,69 +362,85 @@ public class PlayerController : MonoBehaviour {
         return true;
     }
 
-    void KeyboardMovement() 
+    void KeyboardMovement()
     {
         //movement change depends on speed given
         Vector3 moveLeftRight = Vector3.right * speed * Time.deltaTime;
         Vector3 MoveForwardBackward = Vector3.forward * speed * Time.deltaTime;
-
         Vector3 targetPos = transform.position;
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) 
-        {            
-			anim.SetBool("LeftMovement", true);
-			targetPos -= moveLeftRight;            
+
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            anim.SetBool("LeftMovement", true);
+            targetPos -= moveLeftRight;
+        }
+        if (Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.LeftArrow))
+        {
+            anim.SetBool("LeftMovement", false);
         }
 
-		if (Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.LeftArrow)) 
-		{            
-			anim.SetBool("LeftMovement", false);
-
-		}
-
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) 
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
         {
+            anim.SetBool("RightMovement", true);
             targetPos += moveLeftRight;
         }
-
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) 
+        if (Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.RightArrow))
         {
+            anim.SetBool("RightMovement", false);
+        }
+
+        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+        {
+            anim.SetBool("DownMovement", true);
             targetPos -= MoveForwardBackward;
         }
-
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) 
+        if (Input.GetKeyUp(KeyCode.S) || Input.GetKeyUp(KeyCode.DownArrow))
         {
-            targetPos += MoveForwardBackward;
+            anim.SetBool("DownMovement", false);
         }
 
-        if (isInsideFreeSpace(targetPos, new Vector3(this.transform.localScale[0] / 2, 0f, this.transform.localScale[2] / 10), targetPos - transform.position)) 
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
-            
+            anim.SetBool("UpMovement", true);
+            targetPos += MoveForwardBackward;
+        }
+        if (Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.UpArrow))
+        {
+            anim.SetBool("UpMovement", false);
+        }
+
+        if (isInsideFreeSpace(targetPos, new Vector3(this.transform.localScale[0] / 2, 0f, this.transform.localScale[2] / 10), targetPos - transform.position))
+        {
             transform.position = targetPos;
         }
     }
 
-    //used as an animation event once we have movement animation
-    void PlayFootstepSound()
+    //used as an animation events
+    void PlayFootstepSound_0()
     {
-        AudioSource.PlayClipAtPoint(footStepSound, transform.position);
+        AudioSource.PlayClipAtPoint(footStepSound[0], transform.position);
+    }
+    void PlayFootstepSound_1()
+    {
+        AudioSource.PlayClipAtPoint(footStepSound[1], transform.position);
     }
 
-    void SpawnBomb() 
+    void SpawnBomb()
     {
         //Bombs can only placed on the middle of a tile
         Vector3 bombPosition = transform.position;
         bombPosition.x = Mathf.Round(bombPosition.x);
         bombPosition.z = Mathf.Round(bombPosition.z);
-        ////////////////////Add a limit to the number of bombs placed
+        //Add a limit to the number of bombs placed
         int count = 0;
-        foreach (Bomb bombPlaced in FindObjectsOfType<Bomb>()) 
+        foreach (Bomb bombPlaced in FindObjectsOfType<Bomb>())
         {
             count++;
-            if (count >= maxNumberOfBombs) 
+            if (count >= maxNumberOfBombs)
             {
                 return;
             }
-            if (bombPlaced.transform.position == bombPosition) 
+            if (bombPlaced.transform.position == bombPosition)
             {
                 return;
             }
@@ -432,11 +449,11 @@ public class PlayerController : MonoBehaviour {
         //Sort the bombs to one parent folder to be neat
         GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
         AudioSource.PlayClipAtPoint(placeBombSound, newBomb.transform.position);
-        if (GameObject.Find("Bomb Parent")) 
+        if (GameObject.Find("Bomb Parent"))
         {
             newBomb.transform.SetParent(GameObject.Find("Bomb Parent").transform);
         }
-        else 
+        else
         {
             GameObject parent = new GameObject("Bomb Parent");
             newBomb.transform.SetParent(parent.transform);
