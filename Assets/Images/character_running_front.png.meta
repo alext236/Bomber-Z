@@ -1,13 +1,13 @@
 fileFormatVersion: 2
-guid: 36870e720b0c94754a00434bc906fcb0
-timeCreated: 1445007787
+guid: 1c9f1fd89a36741e7a4454b2c262246e
+timeCreated: 1445072157
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
-    21300000: player_left_anim_0
-    21300002: player_left_anim_1
-    21300004: player_left_anim_2
-    21300006: player_left_anim_3
+    21300000: character_running_front_0
+    21300002: character_running_front_1
+    21300004: character_running_front_2
+    21300006: character_running_front_3
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -47,50 +47,50 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: .5, y: .5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spritePixelsToUnits: 80
+  spritePixelsToUnits: 100
   alphaIsTransparency: 1
   textureType: 8
   buildTargetSettings: []
   spriteSheet:
     sprites:
-    - name: player_left_anim_0
+    - name: character_running_front_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: player_left_anim_1
+    - name: character_running_front_1
       rect:
         serializedVersion: 2
         x: 80
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: player_left_anim_2
+    - name: character_running_front_2
       rect:
         serializedVersion: 2
         x: 160
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: player_left_anim_3
+    - name: character_running_front_3
       rect:
         serializedVersion: 2
         x: 240
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
