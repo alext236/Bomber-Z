@@ -3,7 +3,6 @@ using System.Collections;
 
 public class MusicPlayer : MonoBehaviour
 {
-
     private static MusicPlayer instance = null;
     private AudioSource soundTrack;
 
@@ -45,15 +44,26 @@ public class MusicPlayer : MonoBehaviour
         }
         else if (level == 1)
         {      //Main Game
-
-            soundTrack.clip = mainGame;
-            soundTrack.Play();
+            if (mainGame)
+            {
+                soundTrack.clip = mainGame;
+                soundTrack.Play();
+            } else
+            {
+                Debug.LogError("No main game music");
+            }            
         }
         else if (level == 2)
         {      //Game over
-
-            soundTrack.clip = gameOver;
-            soundTrack.Play();
+            if (gameOver)
+            {
+                soundTrack.clip = gameOver;
+                soundTrack.Play();
+            } else
+            {
+                Debug.LogError("No game over music");
+            }
+            
         }
         else if (level == 3)
         {
