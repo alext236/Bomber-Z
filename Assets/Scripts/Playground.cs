@@ -7,13 +7,37 @@ public class Playground : MonoBehaviour {
     [Tooltip("Should be an even number")]
     public int height;
 
+    public GameObject[] hiddenPowerUpsToSpawn;   //Temporary. Move this to DestructibleWall class after having a prefab
+    private IPowerUp[] hiddenPowerUps;
+
     private Material material;
 
-	// Use this for initialization
-	void Awake () {
+    public IPowerUp[] HiddenPowerUps
+    {
+        get
+        {
+            return hiddenPowerUps;
+        }
+
+        set
+        {
+            hiddenPowerUps = value;
+        }
+    }
+
+    // Use this for initialization
+    void Awake () {
         ModifyMaterialTiling();
         SetGroundSize();
         SetPlaygroundAxis();
+
+        hiddenPowerUps = new IPowerUp[hiddenPowerUpsToSpawn.Length];
+
+        for (int i = 0; i < hiddenPowerUpsToSpawn.Length; i++)
+        {
+            hiddenPowerUps[i] = hiddenPowerUpsToSpawn[i].GetComponent(typeof(IPowerUp)) as IPowerUp;
+        }
+                
 	}
 	
 	// Update is called once per frame

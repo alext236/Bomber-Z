@@ -17,8 +17,8 @@ public class Bomb : MonoBehaviour {
 
     }
 
-    [Range (1, 10)]
-    public int length = 1;
+    [Range (1, 10)]     //Consider setting static
+    public static int length = 1;
     
 //    [Range(0.1f, 2f)]
 //    [Tooltip("Duration the fire stays on screen")]
@@ -228,7 +228,9 @@ public class Bomb : MonoBehaviour {
                 GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
                 flag_continue = false;
             }
-            else if (m_hit.collider.tag == "Wall")
+            //else if (m_hit.collider.tag == "Wall")
+            //Change this to recognize 'DestructibleWall' class instead ---- Added by Tuan
+            else if (m_hit.collider.GetComponent<DestructibleWall>())      
             {
                 // if the actual fire length is smaller than planned fire length then the time that fire reach to the object is the portion of the planned time
                 float animation_length = GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
@@ -241,9 +243,12 @@ public class Bomb : MonoBehaviour {
                     GameObject m_enemy_j = (GameObject)m_enemies[j];
                     m_enemy_j.GetComponent<EnemyScript>().mUpdateMyMap(m_hit.collider.gameObject.transform.position);
                 }
+                //Spawn a powerup based on its drop chance
+                m_hit.collider.GetComponent<DestructibleWall>().SpawnAPowerUp();
 
                 Destroy(m_hit.collider.gameObject, ratio_real_planned * fireTime);
                 flag_continue = false;
+                
             }
             flagCheckPlayer = true;
             flagCheckEnemy = true;

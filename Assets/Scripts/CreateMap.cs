@@ -3,7 +3,8 @@ using System.Collections;
 using System;
 using System.IO;
 
-public class CreateMap : MonoBehaviour {
+public class CreateMap : MonoBehaviour
+{
     public enum myDividerType { X, Y };
     public enum GridType { inDestructible = 1, Free = 0, Destructible = 2 };
     public class myDividedArea
@@ -32,15 +33,15 @@ public class CreateMap : MonoBehaviour {
 
         public int getMapVal(ArrayList iMap, int i, int j)
         {
-            if (i >= iMap.Count || j >= ((ArrayList)iMap[0]).Count)
+            if (i >= iMap.Count || j >= ((ArrayList) iMap[0]).Count)
                 return -1;
             ArrayList col_i = (ArrayList)iMap[i]; //each index_i in the map returns a column on the X direction
-            return (int)col_i[j];
+            return (int) col_i[j];
         }
 
         public void setMapVal(ArrayList iMap, int i, int j, int iVal)
         {
-            if (i >= iMap.Count || j >= ((ArrayList)iMap[0]).Count)
+            if (i >= iMap.Count || j >= ((ArrayList) iMap[0]).Count)
                 return;
             ArrayList col_i = (ArrayList)iMap[i]; //each index_i in the map returns a column on the X direction
             col_i[j] = iVal;
@@ -58,17 +59,17 @@ public class CreateMap : MonoBehaviour {
             {
                 if (iTypeOfWall == myDividerType.X)//wall on X
                 {
-                    m_start_point = (int)iFirstBoundary[1];
-                    m_end_point = (int)iEndBoundary[1];
-                    index_i_map = (int)iPoint[0];
+                    m_start_point = (int) iFirstBoundary[1];
+                    m_end_point = (int) iEndBoundary[1];
+                    index_i_map = (int) iPoint[0];
                     index_j_map = m_start_point + w_counter;
                 }
                 else //wall on Y
                 {
-                    m_start_point = (int)iFirstBoundary[0];
-                    m_end_point = (int)iEndBoundary[0];
+                    m_start_point = (int) iFirstBoundary[0];
+                    m_end_point = (int) iEndBoundary[0];
                     index_i_map = m_start_point + w_counter;
-                    index_j_map = (int)iPoint[1];
+                    index_j_map = (int) iPoint[1];
                 }
                 if (m_start_point + w_counter > m_end_point)
                 {
@@ -76,7 +77,7 @@ public class CreateMap : MonoBehaviour {
                 }
                 else
                 {
-                    setMapVal(iMap, index_i_map, index_j_map, (int)GridType.inDestructible);
+                    setMapVal(iMap, index_i_map, index_j_map, (int) GridType.inDestructible);
                 }
                 w_counter++;
             }
@@ -88,11 +89,11 @@ public class CreateMap : MonoBehaviour {
                     Vector2 myEmptyPoint = (Vector2)iEmptyPoints[i];
                     if (myCheckOneWayPath(iMap, myEmptyPoint))
                     {
-                        setMapVal(iMap, (int)myEmptyPoint[0], (int)myEmptyPoint[1], (int)GridType.Free);
+                        setMapVal(iMap, (int) myEmptyPoint[0], (int) myEmptyPoint[1], (int) GridType.Free);
                     }
                 }
             }
-            
+
             return;
         }
 
@@ -143,10 +144,10 @@ public class CreateMap : MonoBehaviour {
             Vector2 right_child_boundary_end;
             if (iSubArea.m_divider_type == myDividerType.X)//take the first sample to divide X, other samples to place holes on X walls
             {
-                x_sample = UnityEngine.Random.Range((int)iSubArea.mFirstBorder[0]+1, (int)iSubArea.mEndBorder[0]-1 +1);
+                x_sample = UnityEngine.Random.Range((int) iSubArea.mFirstBorder[0] + 1, (int) iSubArea.mEndBorder[0] - 1 + 1);
                 //for placing holes in the wall
-                started_empty_poses = (int)iSubArea.mFirstBorder[1];
-                end_empty_poses = (int)iSubArea.mEndBorder[1];
+                started_empty_poses = (int) iSubArea.mFirstBorder[1];
+                end_empty_poses = (int) iSubArea.mEndBorder[1];
 
                 if (getMapVal(iMap, x_sample, started_empty_poses - 1) == 0)
                 {
@@ -159,7 +160,7 @@ public class CreateMap : MonoBehaviour {
                 y_sample = started_empty_poses;
                 for (int j = 0; j < numberOfRandSamples; j++)
                 {
-                    y_sample = UnityEngine.Random.Range(started_empty_poses, end_empty_poses +1);
+                    y_sample = UnityEngine.Random.Range(started_empty_poses, end_empty_poses + 1);
                     setEmptyPoses.Add(new Vector2(x_sample, y_sample));
                 }
                 next_type = myDividerType.Y;
@@ -170,18 +171,18 @@ public class CreateMap : MonoBehaviour {
                 else
                     left_child_boundary_end = new Vector2(iSubArea.mFirstBorder[0], iSubArea.mEndBorder[1]);
                 if (x_sample + 1 <= iSubArea.mEndBorder[0])
-                    right_child_boundary_start = new Vector2(x_sample+1, iSubArea.mFirstBorder[1]);
+                    right_child_boundary_start = new Vector2(x_sample + 1, iSubArea.mFirstBorder[1]);
                 else
                     right_child_boundary_start = new Vector2(iSubArea.mEndBorder[0], iSubArea.mFirstBorder[1]);
                 right_child_boundary_end = new Vector2(iSubArea.mEndBorder[0], iSubArea.mEndBorder[1]);
             }
             else
             {
-                y_sample = UnityEngine.Random.Range((int)iSubArea.mFirstBorder[1] + 1, (int)iSubArea.mEndBorder[1] - 1 +1);
+                y_sample = UnityEngine.Random.Range((int) iSubArea.mFirstBorder[1] + 1, (int) iSubArea.mEndBorder[1] - 1 + 1);
                 //for placing holes in the wall
-                started_empty_poses = (int)iSubArea.mFirstBorder[0];
-                end_empty_poses = (int)iSubArea.mEndBorder[0];
-                
+                started_empty_poses = (int) iSubArea.mFirstBorder[0];
+                end_empty_poses = (int) iSubArea.mEndBorder[0];
+
                 if (getMapVal(iMap, started_empty_poses - 1, y_sample) == 0)
                 {
                     setEmptyPoses.Add(new Vector2(started_empty_poses, y_sample));
@@ -193,18 +194,18 @@ public class CreateMap : MonoBehaviour {
                 x_sample = started_empty_poses;
                 for (int j = 0; j < numberOfRandSamples; j++)
                 {
-                    x_sample = UnityEngine.Random.Range(started_empty_poses, end_empty_poses +1);
+                    x_sample = UnityEngine.Random.Range(started_empty_poses, end_empty_poses + 1);
                     setEmptyPoses.Add(new Vector2(x_sample, y_sample));
                 }
                 next_type = myDividerType.X;
 
                 left_child_boundary_start = new Vector2(iSubArea.mFirstBorder[0], iSubArea.mFirstBorder[1]);
                 if (y_sample - 1 >= iSubArea.mFirstBorder[1])
-                    left_child_boundary_end = new Vector2(iSubArea.mEndBorder[0], y_sample-1);
+                    left_child_boundary_end = new Vector2(iSubArea.mEndBorder[0], y_sample - 1);
                 else
                     left_child_boundary_end = new Vector2(iSubArea.mEndBorder[0], iSubArea.mFirstBorder[1]);
                 if (y_sample + 1 <= iSubArea.mEndBorder[1])
-                    right_child_boundary_start = new Vector2(iSubArea.mFirstBorder[0], y_sample+1);
+                    right_child_boundary_start = new Vector2(iSubArea.mFirstBorder[0], y_sample + 1);
                 else
                     right_child_boundary_start = new Vector2(iSubArea.mFirstBorder[0], iSubArea.mEndBorder[1]);
                 right_child_boundary_end = new Vector2(iSubArea.mEndBorder[0], iSubArea.mEndBorder[1]);
@@ -227,9 +228,10 @@ public class CreateMap : MonoBehaviour {
         public Vector2 mFirstBorder;
         public Vector2 mEndBorder;
     }
-	
+
     // Use this for initialization
-	void Start () {
+    void Start()
+    {
         //Automatically set N, M and Plane
         N = GetComponent<Playground>().width;
         M = GetComponent<Playground>().height;
@@ -248,11 +250,12 @@ public class CreateMap : MonoBehaviour {
             + new Vector3(plane_3d_size[0] / (2 * N), 0f, plane_3d_size[2] / (2 * M));
         myCreateScene(grid_size, first_cube_location, 100);
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
 
     public Vector3 getGridSize()
     {
@@ -279,6 +282,7 @@ public class CreateMap : MonoBehaviour {
     myDividedArea myAreaDivider;
     ArrayList myGameObjects;
     ///////////
+
     void initializing_Map(int iN, int iM)
     {
         myMap = new ArrayList(iN);
@@ -287,7 +291,7 @@ public class CreateMap : MonoBehaviour {
             myMap.Add(new ArrayList(iM));
             for (int j = 0; j < iM; j++)
             {
-                ((ArrayList)myMap[i]).Add(0);
+                ((ArrayList) myMap[i]).Add(0);
             }
         }
         Vector2 FirstWallBoundary = new Vector2(0f, 0f);
@@ -310,7 +314,7 @@ public class CreateMap : MonoBehaviour {
         {
             m_Reader = new StreamReader(directory_name + "number_file.txt");
             String str_num = m_Reader.ReadLine();
-            num_file = ((int)str_num[0] - 48) + 1;
+            num_file = ((int) str_num[0] - 48) + 1;
             mFile_path = directory_name + "Map" + str_num + ".txt";
             m_Reader.Close();
         }
@@ -344,13 +348,13 @@ public class CreateMap : MonoBehaviour {
 
     void myCreateScene(Vector3 iGridSize, Vector3 iLocation, int numberOfBox)
     {
-        
+
         Vector3 d_pos = new Vector3(iLocation[0], iLocation[1] + iGridSize[1] / 2, iLocation[2]);
         for (int j = 0; j < M; j++)
         {
             for (int i = 0; i < N; i++)
             {
-                if (myAreaDivider.getMapVal(myMap, i, j) == (int)GridType.inDestructible)
+                if (myAreaDivider.getMapVal(myMap, i, j) == (int) GridType.inDestructible)
                 {
                     //Later Instantiate here a wall prefab instead of a simple cube
                     GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -361,11 +365,12 @@ public class CreateMap : MonoBehaviour {
                     //mcube_obstacle.size = iGridSize / 5 + new Vector3(0.05f, 0.05f, 0.05f);
                     //mcube_obstacle.carving = true;
                     //Sort all the cube into appropriate parent
-                    if (!GameObject.Find("Indestructible Wall")) {
+                    if (!GameObject.Find("Indestructible Wall"))
+                    {
                         GameObject newParent = new GameObject("Indestructible Wall");
                         cube_ij.transform.SetParent(newParent.transform);
-                    } 
-                    else 
+                    }
+                    else
                     {
                         cube_ij.transform.SetParent(GameObject.Find("Indestructible Wall").transform);
                     }
@@ -381,9 +386,9 @@ public class CreateMap : MonoBehaviour {
         {
             int i = UnityEngine.Random.Range((int)0, (int)N);
             int j = UnityEngine.Random.Range((int)0, (int)M);
-            if (myAreaDivider.getMapVal(myMap, i, j) == (int)GridType.Free)
+            if (myAreaDivider.getMapVal(myMap, i, j) == (int) GridType.Free)
             {
-                myAreaDivider.setMapVal(myMap, i, j, (int)GridType.Destructible);
+                myAreaDivider.setMapVal(myMap, i, j, (int) GridType.Destructible);
                 GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                 cube_ij.transform.localScale = iGridSize;
@@ -402,8 +407,12 @@ public class CreateMap : MonoBehaviour {
                     cube_ij.transform.SetParent(GameObject.Find("Wall").transform);
                 }
 
-                //Add tag "Wall" to the cube
+                //Add tag "Wall" to the cube, add script "DestructibleWall" to the cube ---- Added by Tuan for spawning powerup
                 cube_ij.tag = "Wall";
+                cube_ij.AddComponent<DestructibleWall>();
+                cube_ij.GetComponent<DestructibleWall>().powerUps.AddRange(FindObjectOfType<Playground>().HiddenPowerUps);
+
+
                 Material newMaterial = new Material((Shader.Find("Diffuse")));
                 cube_ij.GetComponent<MeshRenderer>().material = newMaterial;
                 //cube_ij.AddComponent<Material>();
@@ -411,4 +420,6 @@ public class CreateMap : MonoBehaviour {
             }
         }
     }
+
+
 }

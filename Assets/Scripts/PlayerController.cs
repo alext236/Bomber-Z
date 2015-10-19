@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
 
     [Range(1f, 10f)]
     public float speed;
-    [Range(1, 10)]      /////////////////Add limit on bombs
+    [Range(1, 10)]      /////////////////Add limit on bombs. Consider setting static
     public int maxNumberOfBombs;
 
     public GameObject bomb;
@@ -448,6 +448,7 @@ public class PlayerController : MonoBehaviour
 
         //Sort the bombs to one parent folder to be neat
         GameObject newBomb = Instantiate(bomb, bombPosition, Quaternion.identity) as GameObject;
+        
         AudioSource.PlayClipAtPoint(placeBombSound, newBomb.transform.position);
         if (GameObject.Find("Bomb Parent"))
         {
