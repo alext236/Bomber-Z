@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
     private Animator anim;
 
     private GameObject planeInfo;
-    private ArrayList m_enemy_i_script;
+    private ArrayList m_enemy_i;
 
     bool flag_got_map_info = false;
     CreateMap myMapInfo;
@@ -58,9 +58,7 @@ public class PlayerController : MonoBehaviour
         bombFireTime = new ArrayList();
 
         planeInfo = FindObjectOfType<Playground>().gameObject;
-        m_enemy_i_script = new ArrayList();
-        m_enemy_i_script.Add(GameObject.Find("Enemy").GetComponent<EnemyScript>());
-        m_enemy_i_script.Add(GameObject.Find("Enemy 1").GetComponent<EnemyScript>());
+        m_enemy_i = planeInfo.GetComponent<CreateMap>().getEnemies();
 
         //For setting up anim
         anim = GetComponent<Animator>();
@@ -87,36 +85,74 @@ public class PlayerController : MonoBehaviour
                 EscapeTileBombPos[1] = -1;
             }
         }
-        for (int i = 0; i < m_enemy_i_script.Count; i++)
+        for (int i = 0; i < m_enemy_i.Count; i++)
         {
-            ((EnemyScript) m_enemy_i_script[i]).setTargetPos(this.transform.position);
+            GameObject mEnemy = (GameObject)m_enemy_i[i];
+            if (mEnemy != null)
+                ((GameObject)m_enemy_i[i]).GetComponent<EnemyScript>().setTargetPos(this.transform.position, true);
         }
+    }
+
+    int getMapVal(ArrayList iMap, int i, int j)
+    {
+        if (i >= iMap.Count || j >= ((ArrayList)iMap[0]).Count)
+            return -1;
+        ArrayList col_i = (ArrayList)iMap[i]; //each index_i in the map returns a column on the X direction
+        return (int)col_i[j];
     }
 
     //Find the first available free tile
     Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
     {
         bool flag_continue = true;
-        int index_i = 0;
-        int index_j = 0;
-        for (int i = 0; i < iMap.Count && flag_continue; i++)
+        int index_i = 1;
+        int index_j = 1;
+        bool find_first = false;
+        for (int i = 1; i < iMap.Count-1 && flag_continue; i++)
         {
             ArrayList iMap_col = (ArrayList)iMap[i];
-            for (int j = 0; j < iMap_col.Count && flag_continue; j++)
+            for (int j = 1; j < iMap_col.Count-1 && flag_continue; j++)
             {
                 int val_ij = (int)iMap_col[j];
                 if (val_ij == (int) CreateMap.GridType.Free)
                 {
-                    flag_continue = false;
-                    index_i = i;
-                    index_j = j;
+                    if (!find_first)
+                    {
+                        index_i = i;
+                        index_j = j;
+                        find_first = true;
+                    }
+                    if (getMapVal(iMap, i + 1, j) == (int)CreateMap.GridType.Free && getMapVal(iMap, i, j + 1) == (int)CreateMap.GridType.Free)
+                    {
+                        flag_continue = false;
+                        index_i = i;
+                        index_j = j;
+                    }
+                    if (getMapVal(iMap, i - 1, j) == (int)CreateMap.GridType.Free && getMapVal(iMap, i, j + 1) == (int)CreateMap.GridType.Free)
+                    {
+                        flag_continue = false;
+                        index_i = i;
+                        index_j = j;
+                    }
+                    if (getMapVal(iMap, i - 1, j) == (int)CreateMap.GridType.Free && getMapVal(iMap, i, j - 1) == (int)CreateMap.GridType.Free)
+                    {
+                        flag_continue = false;
+                        index_i = i;
+                        index_j = j;
+                    }
+                    if (getMapVal(iMap, i + 1, j) == (int)CreateMap.GridType.Free && getMapVal(iMap, i, j - 1) == (int)CreateMap.GridType.Free)
+                    {
+                        flag_continue = false;
+                        index_i = i;
+                        index_j = j;
+                    }
                 }
             }
         }
         return new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(index_i * iGridSize[0], 0f, index_j * iGridSize[2]);
     }
 
-    public void setBombInfo(Vector3 iBombPos, float iFireTime, float iMaxLength)
+    public void setBombInfo(Vector3 iBombPos, float iFireTime, ArrayList iMaxLength)
     {
         //check_hit_bomb
         if (check_hit_bomb == null)
@@ -201,55 +237,56 @@ public class PlayerController : MonoBehaviour
                 Vector3 p_pos = transform.position;
                 float dis = (p_pos - (Vector3)last_bomb_pos[i]).magnitude;
 
-                if (dis <= (float) bombFireLength[i] && (bool) check_hit_bomb[i])
+                
+                for (int j = 0; j < 5 && !mHit_flag; j++)
                 {
-                    for (int j = 0; j < 5 && !mHit_flag; j++)
+                    if ((bool) ((ArrayList) check_directions_forEachBomb[i])[j] && dis <= (float)((ArrayList)bombFireLength[i])[j] && (bool)check_hit_bomb[i])
                     {
-                        if ((bool) ((ArrayList) check_directions_forEachBomb[i])[j])
+                        //cast rays on different directions
+                        Vector3 mDir = getDirection(j);
+                        Vector3 pos = (Vector3)last_bomb_pos[i];
+                        float ray_dis = ((float)((ArrayList)bombFireLength[i])[j]) * (float)delta_time[i];
+                        if (mDir == Vector3.down)
                         {
-                            //cast rays on different directions
-                            Vector3 mDir = getDirection(j);
-                            Vector3 pos = (Vector3)last_bomb_pos[i];
-                            if (mDir == Vector3.down)
-                                pos -= 3 * mDir;
-                            float ray_dis = ((float)bombFireLength[i]) * (float)delta_time[i];
-                            Ray impactRay = new Ray(pos, mDir);
-                            RaycastHit[] hit = Physics.RaycastAll(impactRay, ray_dis);
+                            pos -= 3 * mDir;
+                            ray_dis = 5 * ray_dis;
+                        }
+                        Ray impactRay = new Ray(pos, mDir);
+                        RaycastHit[] hit = Physics.RaycastAll(impactRay, ray_dis);
 
-                            //sort rays based on the distance of objects
-                            ArrayList hit_arr = new ArrayList();
-                            for (int k = 0; k < hit.Length; k++)
-                                hit_arr.Add(hit[k]);
-                            if (hit_arr.Count > 0)
+                        //sort rays based on the distance of objects
+                        ArrayList hit_arr = new ArrayList();
+                        for (int k = 0; k < hit.Length; k++)
+                            hit_arr.Add(hit[k]);
+                        if (hit_arr.Count > 0)
+                        {
+                            IComparer myComparer = new mySortClass();
+                            hit_arr.Sort(myComparer);
+                        }
+
+                        bool flag_continue_on_ray = true;
+                        for (int k = 0; k < hit_arr.Count && flag_continue_on_ray; k++)
+                        {
+                            RaycastHit m_hit = (RaycastHit)hit_arr[k];
+                            Debug.DrawLine(pos, pos + mDir * ray_dis * (float) delta_time[i], Color.red);
+                            if (m_hit.transform.name == "Player")
                             {
-                                IComparer myComparer = new mySortClass();
-                                hit_arr.Sort(myComparer);
-                            }
+                                //Do something to the player
+                                Debug.Log("The player is hit by the bomb ");
+                                AudioSource.PlayClipAtPoint(playerHurtSound, transform.position);
 
-                            bool flag_continue_on_ray = true;
-                            for (int k = 0; k < hit_arr.Count && flag_continue_on_ray; k++)
+                                mHit_flag = true;
+                                check_hit_bomb[i] = false;
+                                flag_continue_on_ray = false;
+                            }
+                            if (m_hit.transform.name == "Cube")
                             {
-                                RaycastHit m_hit = (RaycastHit)hit_arr[k];
-                                Debug.DrawLine(pos, pos + mDir * ray_dis * (float) delta_time[i], Color.red);
-                                if (m_hit.transform.name == "Player")
-                                {
-                                    //Do something to the player
-                                    Debug.Log("The player is hit by the bomb ");
-                                    AudioSource.PlayClipAtPoint(playerHurtSound, transform.position);
-
-                                    mHit_flag = true;
-                                    check_hit_bomb[i] = false;
-                                    flag_continue_on_ray = false;
-                                }
-                                if (m_hit.transform.name == "Cube")
-                                {
-                                    flag_continue_on_ray = false;
-                                    ((ArrayList) check_directions_forEachBomb[i])[j] = false;
-                                }
+                                flag_continue_on_ray = false;
+                                ((ArrayList) check_directions_forEachBomb[i])[j] = false;
                             }
-                        }//if direction j of bomb i
-                    }//for directions
-                }//if inside dis of bomb i
+                        }
+                    }//if direction j of bomb i
+                }//for directions
             }
 
             for (int i = 0; i < check_hit_bomb.Count; i++)
@@ -420,17 +457,42 @@ public class PlayerController : MonoBehaviour
     {
         AudioSource.PlayClipAtPoint(footStepSound[0], transform.position);
     }
+
     void PlayFootstepSound_1()
     {
         AudioSource.PlayClipAtPoint(footStepSound[1], transform.position);
     }
 
+    Vector3 mPosToMapIndex(Vector3 iPos, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
+    {
+        iPos = iPos - new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]);
+        return new Vector3(iPos[0] / iGridSize[0], 0f, iPos[2] / iGridSize[2]);
+    }
+
+    Vector3 mMapIndexToPos(Vector3 iMapIndex, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
+    {
+        Vector3 nPos = new Vector3(iMapIndex[0] * iGridSize[0], 0f, iMapIndex[2] * iGridSize[2]);
+        return nPos + new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(0f, transform.position[1], 0f);
+    }
+
     void SpawnBomb()
     {
-        //Bombs can only placed on the middle of a tile
-        Vector3 bombPosition = transform.position;
+        Vector3 bombPosition = mPosToMapIndex(transform.position, myLocationOfFirstCube, myGridSize);
         bombPosition.x = Mathf.Round(bombPosition.x);
         bombPosition.z = Mathf.Round(bombPosition.z);
+
+        for (int i = 0; i < m_enemy_i.Count; i++)
+        {
+            GameObject mEnemy = (GameObject)m_enemy_i[i];
+            if (mEnemy != null)
+                ((GameObject)m_enemy_i[i]).GetComponent<EnemyScript>().updateMapBombPos(bombPosition, true);
+        }
+
+        bombPosition = mMapIndexToPos(bombPosition, myLocationOfFirstCube, myGridSize);
+        //Bombs can only placed on the middle of a tile
+        //Vector3 bombPosition = transform.position;
+        
+        //bombPosition = bombPosition - myLocationOfFirstCube;
         //Add a limit to the number of bombs placed
         int count = 0;
         foreach (Bomb bombPlaced in FindObjectsOfType<Bomb>())

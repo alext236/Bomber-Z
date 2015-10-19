@@ -78,7 +78,10 @@ public class EnemyScript : MonoBehaviour {
     public int Enemy_ith_Place = 0;
     public float EnemySpeed = 0.1f;
     public myEnemyType EnemyType = myEnemyType.FollowingPlayer;
+    public bool respawnedable = true;
 //    NavMeshAgent m_Agent;
+
+    public void setEnemyType(myEnemyType iEnemyType) { EnemyType = iEnemyType; }
 
     //bomb variables
     ArrayList delta_time;//float
@@ -91,13 +94,14 @@ public class EnemyScript : MonoBehaviour {
     bool updated_env = false;
 
     PlayerController mPlayerInfo;
+    CreateMap myMapInfo;
     ArrayList myMap;
     Vector3 myLocationOfFirstCube;
     Vector3 myGridSize;
 
     ArrayList myUpdatedPath;
     bool flag_update_path = true;
-    
+    Vector3 EscapeTileBombPos;
     // Use this for initialization
 	void Start () 
     {
@@ -116,34 +120,70 @@ public class EnemyScript : MonoBehaviour {
 //        m_Agent.destination = TragetPos;
         if (!updated_env)
         {
-            CreateMap myMapInfo = FindObjectOfType<CreateMap>();
+            myMapInfo = FindObjectOfType<CreateMap>();
             mPlayerInfo = FindObjectOfType<PlayerController>();
             myGridSize = myMapInfo.getGridSize();
             myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
             myMap = myMakeCopyOf(myMapInfo.GetMyMap());
             transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
+            setTargetPos(transform.position - new Vector3(0f, this.transform.position[1], 0f), false);
             updated_env = true;
             
         }
+
+        if (EnemyType == myEnemyType.NotFollowingPlayer)
+        {
+            float threshold = Mathf.Abs(EnemySpeed);
+            bool flag_find_new_target = false;
+            if ((this.transform.position - new Vector3(0.0f, transform.position[1], 0.0f) - TragetPos).magnitude < threshold)
+            {
+                flag_find_new_target = true;
+            }
+            else if (myUpdatedPath != null)
+            {
+                if (myUpdatedPath.Count == 0)
+                {
+                    flag_find_new_target = true;
+                }
+            }
+            if (flag_find_new_target)
+            {
+                int rand_pos = UnityEngine.Random.Range((int)0, (int)2);
+                if (rand_pos == 0)
+                    TragetPos = myFindRandomPlace(myMap, myLocationOfFirstCube, myGridSize, true) + new Vector3(0f, transform.position[1], 0f);
+                else
+                    TragetPos = myFindRandomPlace(myMap, myLocationOfFirstCube, myGridSize, false) + new Vector3(0f, transform.position[1], 0f);
+                flag_update_path = true;
+            }
+        }
+
         if (flag_update_path)
         {
             if (EnemyType == myEnemyType.FollowingPlayer)
             {
-                setTargetPos(FindObjectOfType<PlayerController>().transform.position);
+                setTargetPos(FindObjectOfType<PlayerController>().transform.position, true);//get position of the agent
             }
             else
             {
-                setTargetPos(this.transform.position);
+                setTargetPos(TragetPos, false);
             }
-            Vector3 pos1 = transform.position - new Vector3(0f, this.transform.position[1], 0f);
+            Vector3 pos1 = mPosToMapIndex(transform.position, myLocationOfFirstCube, myGridSize);
             pos1[0] = Mathf.Round(pos1[0]);
             pos1[2] = Mathf.Round(pos1[2]);
             Vector3 pos2 = TragetPos;
-            pos1 = mPosToMapIndex(pos1, myLocationOfFirstCube, myGridSize);
-            pos2 = mPosToMapIndex(pos2, myLocationOfFirstCube, myGridSize);
-            myUpdatedPath = mFindPath(pos1, pos2);
+            myUpdatedPath = mFindPath(pos1, pos2, myUpdatedPath);
             flag_update_path = false;
         }
+
+        if (EscapeTileBombPos[1] >= 0)
+        {
+            Vector3 dis_player_bomb = transform.position - EscapeTileBombPos;
+            if (!(Mathf.Abs(dis_player_bomb[0]) < myGridSize[0] && Mathf.Abs(dis_player_bomb[2]) < myGridSize[2]))
+            {
+                EscapeTileBombPos[1] = -1;
+            }
+        }
+
         mMoveOnThePath(myUpdatedPath, myLocationOfFirstCube, myGridSize);
         checkBombHitEnemy();
 	}
@@ -163,7 +203,18 @@ public class EnemyScript : MonoBehaviour {
             }
             if (hit[i].transform.name == "Bomb(Clone)" || hit[i].transform.name == "Bomb")
             {
-                return true;//player cannot get closer to the bomb
+                if (EscapeTileBombPos[1] >= 0)//if there is a tile that the player can get away from it
+                {
+                    Vector3 dis_player_bomb = transform.position - EscapeTileBombPos;
+                    if (Mathf.Abs(dis_player_bomb[0]) < myGridSize[0] && Mathf.Abs(dis_player_bomb[2]) < myGridSize[2])
+                    {
+                        return false;//enemy can get away from bomb
+                    }
+                    else
+                        return true;//enemy cannot get closer to the bomb
+                }
+                else
+                    return true;//enemy cannot get closer to the bomb
             }
         }
 
@@ -194,19 +245,24 @@ public class EnemyScript : MonoBehaviour {
         return cMap;
     }
 
-    public void setTargetPos(Vector3 iPos)
+    public void setTargetPos(Vector3 iPos, bool iFromPlayer)
     {
-        Vector3 nPos = iPos - new Vector3(0f, iPos[1], 0f);
+        Vector3 nPos = mPosToMapIndex(iPos, myLocationOfFirstCube, myGridSize);
         nPos[0] = Mathf.Round(nPos[0]);
         nPos[2] = Mathf.Round(nPos[2]);
+
+        if (iFromPlayer && EnemyType == myEnemyType.NotFollowingPlayer)
+            return;
+
         if ((nPos - TragetPos).magnitude > 0)
         {
             TragetPos = nPos;
             flag_update_path = true;
         }
+
     }
 
-    void mMoveOnThePath(ArrayList iUpdatedPath, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
+    void mMoveOnThePath(ArrayList iUpdatedPath, Vector3 iLocationOfFirstCube, Vector3 iGridSize)/////////////////////////////////////////////Koursoh: Move Enemy on the path
     {
         if (iUpdatedPath == null)
             return;
@@ -263,13 +319,22 @@ public class EnemyScript : MonoBehaviour {
         return false;
     }
 
-    ArrayList mFindPath(Vector3 start, Vector3 end)//start and end are on the map
+    ArrayList mFindPath(Vector3 start, Vector3 end, ArrayList iUpdatedPath)//start and end are on the map
     {
         ArrayList m_path = new ArrayList();
+
+        if (iUpdatedPath != null)
+        {
+            if (iUpdatedPath.Count != 0)
+            {
+                start = (Vector3)iUpdatedPath[iUpdatedPath.Count - 1];
+            }
+        }
 
         AStarNode p_node = new AStarNode(start, end, null);
         ArrayList updated_map = getUpdatedMap();
         ArrayList open_list = new ArrayList();
+        
         open_list.Add(p_node);
         ArrayList closed_list = new ArrayList();
 
@@ -324,6 +389,51 @@ public class EnemyScript : MonoBehaviour {
         return m_path;// path from end to start -> must traverse reversely
     }
 
+    Vector3 myFindRandomPlace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize, bool onX)
+    {
+        bool flag_continue = true;
+        int rand_pos = 1;
+        int max_counter = 0;
+        if (onX)
+        {
+            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.M - 1);
+            max_counter = (int)myMapInfo.N;
+        }
+        else
+        {
+            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.N - 1);
+            max_counter = (int)myMapInfo.M;
+        }
+        int index_i = 0;
+        int index_j = 0;
+        int ret_i = 1;
+        int ret_j = 1;
+        int rand_counter = UnityEngine.Random.Range((int)0, (int)max_counter-1);
+        for (int i = 0; i < max_counter && flag_continue; i++)
+        {
+            if (onX)
+            {
+                index_i = rand_pos;
+                index_j = i;
+            }
+            else
+            {
+                index_i = i;
+                index_j = rand_pos;
+            }
+            if (getMapVal(myMap, index_i, index_j) == (int)CreateMap.GridType.Free)
+            {
+                if (i >= rand_counter)
+                {
+                    flag_continue = false;
+                }
+                ret_i = index_i;
+                ret_j = index_j;
+            }
+        }
+        return new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(ret_i * iGridSize[0], 0f, ret_j * iGridSize[2]);
+    }
+
     //Find the ith last available free tile
     Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize, int iCount)
     {
@@ -342,10 +452,10 @@ public class EnemyScript : MonoBehaviour {
                     if (m_count >= iCount)
                     {
                         flag_continue = false;
-                        index_i = i;
-                        index_j = j;
                     }
                     m_count++;
+                    index_i = i;
+                    index_j = j;
                 }
             }
         }
@@ -388,54 +498,54 @@ public class EnemyScript : MonoBehaviour {
                 Vector3 p_pos = transform.position;
                 float dis = (p_pos - (Vector3)last_bomb_pos[i]).magnitude;
 
-                if (dis <= (float)bombFireLength[i] && (bool)check_hit_bomb[i])
+                for (int j = 0; j < 5 && !mHit_flag; j++)
                 {
-                    for (int j = 0; j < 5 && !mHit_flag; j++)
+                    if ((bool) ((ArrayList) check_directions_forEachBomb[i])[j] && dis <= (float)((ArrayList)bombFireLength[i])[j] && (bool)check_hit_bomb[i])
                     {
-                        if ((bool)((ArrayList)check_directions_forEachBomb[i])[j])
+                        //cast rays on different directions
+                        Vector3 mDir = getDirection(j);
+                        Vector3 pos = (Vector3)last_bomb_pos[i];
+                        float ray_dis = ((float)((ArrayList)bombFireLength[i])[j]) * (float)delta_time[i];
+                        if (mDir == Vector3.down)
                         {
-                            //cast rays on different directions
-                            Vector3 mDir = getDirection(j);
-                            Vector3 pos = (Vector3)last_bomb_pos[i];
-                            if (mDir == Vector3.down)
-                                pos -= 3 * mDir;
-                            float ray_dis = ((float)bombFireLength[i]) * (float)delta_time[i];
-                            Ray impactRay = new Ray(pos, mDir);
-                            RaycastHit[] hit = Physics.RaycastAll(impactRay, ray_dis);
+                            pos -= 3 * mDir;
+                            ray_dis = 5 * ray_dis;
+                        }
+                        Ray impactRay = new Ray(pos, mDir);
+                        RaycastHit[] hit = Physics.RaycastAll(impactRay, ray_dis);
 
-                            //sort rays based on the distance of objects
-                            ArrayList hit_arr = new ArrayList();
-                            for (int k = 0; k < hit.Length; k++)
-                                hit_arr.Add(hit[k]);
-                            if (hit_arr.Count > 0)
+                        //sort rays based on the distance of objects
+                        ArrayList hit_arr = new ArrayList();
+                        for (int k = 0; k < hit.Length; k++)
+                            hit_arr.Add(hit[k]);
+                        if (hit_arr.Count > 0)
+                        {
+                            IComparer myComparer = new mySortClass();
+                            hit_arr.Sort(myComparer);
+                        }
+
+                        bool flag_continue_on_ray = true;
+                        for (int k = 0; k < hit_arr.Count && flag_continue_on_ray; k++)
+                        {
+                            RaycastHit m_hit = (RaycastHit)hit_arr[k];
+                            Debug.DrawLine(pos, pos + mDir * ray_dis * (float)delta_time[i], Color.red);
+                            if (m_hit.transform.name == this.transform.name)
                             {
-                                IComparer myComparer = new mySortClass();
-                                hit_arr.Sort(myComparer);
-                            }
+                                //Do something to the player
+                                Debug.Log("The " + this.transform.name + " is hit by the bomb ");
 
-                            bool flag_continue_on_ray = true;
-                            for (int k = 0; k < hit_arr.Count && flag_continue_on_ray; k++)
+                                mHit_flag = true;
+                                check_hit_bomb[i] = false;
+                                flag_continue_on_ray = false;
+                            }
+                            if (m_hit.transform.name == "Cube")
                             {
-                                RaycastHit m_hit = (RaycastHit)hit_arr[k];
-                                Debug.DrawLine(pos, pos + mDir * ray_dis * (float)delta_time[i], Color.red);
-                                if (m_hit.transform.name == this.transform.name)
-                                {
-                                    //Do something to the player
-                                    Debug.Log("The " + this.transform.name + " is hit by the bomb ");
-
-                                    mHit_flag = true;
-                                    check_hit_bomb[i] = false;
-                                    flag_continue_on_ray = false;
-                                }
-                                if (m_hit.transform.name == "Cube")
-                                {
-                                    flag_continue_on_ray = false;
-                                    ((ArrayList)check_directions_forEachBomb[i])[j] = false;
-                                }
+                                flag_continue_on_ray = false;
+                                ((ArrayList)check_directions_forEachBomb[i])[j] = false;
                             }
-                        }//if direction j of bomb i
-                    }//for directions
-                }//if inside dis of bomb i
+                        }
+                    }//if direction j of bomb i
+                }//for directions
             }
 
             for (int i = 0; i < check_hit_bomb.Count; i++)
@@ -454,14 +564,22 @@ public class EnemyScript : MonoBehaviour {
 
             if (mHit_flag)
             {
-                this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
-                flag_update_path = true;
+                if (this.respawnedable)
+                {
+                    this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
+                    myUpdatedPath.Clear();
+                    flag_update_path = true;
+                }
+                else
+                {
+                    DestroyObject(gameObject);
+                }
 //                m_Agent.nextPosition = this.transform.position;
             }
         }
     }
 
-    public void setBombInfo(Vector3 iBombPos, float iFireTime, float iMaxLength)
+    public void setBombInfo(Vector3 iBombPos, float iFireTime, ArrayList iMaxLength)
     {
         //check_hit_bomb
         if (check_hit_bomb == null)
@@ -508,5 +626,30 @@ public class EnemyScript : MonoBehaviour {
             bombFireTime = new ArrayList();
         }
         bombFireTime.Add(iFireTime);
+    }
+
+    void setMapVal(ArrayList iMap, int i, int j, int iVal)
+    {
+        if (i >= iMap.Count || j >= ((ArrayList)iMap[0]).Count)
+            return;
+        ArrayList col_i = (ArrayList)iMap[i]; //each index_i in the map returns a column on the X direction
+        col_i[j] = iVal;
+    }
+
+    public void updateMapBombPos(Vector3 iBombPos, bool isBomb)
+    {
+        if (isBomb)
+        {
+            setMapVal(myMap, (int)iBombPos[0], (int)iBombPos[2], (int)CreateMap.GridType.Bomb);
+            Vector3 real_bombPos = mMapIndexToPos(iBombPos, myLocationOfFirstCube, myGridSize);
+            Vector3 dis_player_bomb = transform.position - real_bombPos;
+            if (Mathf.Abs(dis_player_bomb[0]) < myGridSize[0] && Mathf.Abs(dis_player_bomb[2]) < myGridSize[2])
+            {
+                EscapeTileBombPos = real_bombPos;
+            }
+        }
+        else
+            setMapVal(myMap, (int)iBombPos[0], (int)iBombPos[2], (int)CreateMap.GridType.Free);
+        flag_update_path = true;
     }
 }

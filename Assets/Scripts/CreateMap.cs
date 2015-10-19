@@ -6,7 +6,7 @@ using System.IO;
 public class CreateMap : MonoBehaviour
 {
     public enum myDividerType { X, Y };
-    public enum GridType { inDestructible = 1, Free = 0, Destructible = 2 };
+    public enum GridType { inDestructible = 1, Free = 0, Destructible = 2, Bomb = 3 };
     public class myDividedArea
     {
         public myDividedArea(Vector2 iFirstBorder, Vector2 iEndBorder, int iNumberOfRandSamples)
@@ -229,9 +229,38 @@ public class CreateMap : MonoBehaviour
         public Vector2 mEndBorder;
     }
 
+    public GameObject EnemyInfo;
+    ArrayList myEnemies;
+    int EnemyNumbers = 5;
+
+    void initialization() /////////////////////////////////////////////////////////////////////Do everything related to the level here: initialization for level
+    {
+        int mLevel = Application.loadedLevel;
+        EnemyNumbers = 1;//3 * mLevel + 2;
+        int numberOfFollowingEnemies = 2;
+        myEnemies = new ArrayList();
+        for (int i = 0; i < EnemyNumbers; i++)
+        {
+            GameObject newEnemy = Instantiate(EnemyInfo) as GameObject;
+            newEnemy.name = "Enemy" + i.ToString();
+            EnemyScript mEnemy_i_script = newEnemy.GetComponent<EnemyScript>();
+            mEnemy_i_script.setEnemyType(EnemyScript.myEnemyType.NotFollowingPlayer);
+            mEnemy_i_script.Enemy_ith_Place = i;
+            mEnemy_i_script.respawnedable = false;
+            if (numberOfFollowingEnemies > 0)
+            {
+                newEnemy.GetComponent<EnemyScript>().setEnemyType(EnemyScript.myEnemyType.FollowingPlayer);
+                numberOfFollowingEnemies--;
+                mEnemy_i_script.respawnedable = false;
+            }
+            myEnemies.Add(newEnemy);
+        }
+    }
+
     // Use this for initialization
     void Start()
     {
+        initialization();
         //Automatically set N, M and Plane
         N = GetComponent<Playground>().width;
         M = GetComponent<Playground>().height;
@@ -248,7 +277,7 @@ public class CreateMap : MonoBehaviour
         grid_size = new Vector3(plane_3d_size[0] / N, 0.5f, plane_3d_size[2] / M);
         first_cube_location = mPlane_Transform.localPosition - new Vector3(plane_3d_size[0] / 2, 0f, plane_3d_size[2] / 2)
             + new Vector3(plane_3d_size[0] / (2 * N), 0f, plane_3d_size[2] / (2 * M));
-        myCreateScene(grid_size, first_cube_location, 100);
+        myCreateScene(grid_size, first_cube_location, numberOfBox);
     }
 
     // Update is called once per frame
@@ -257,6 +286,8 @@ public class CreateMap : MonoBehaviour
 
     }
 
+    public ArrayList getEnemies() { return myEnemies; }
+    
     public Vector3 getGridSize()
     {
         return grid_size;
@@ -275,9 +306,10 @@ public class CreateMap : MonoBehaviour
     public int numberOfRandSamples = 20;//number of random zeros inside the map (we want this much zeros but size all zeros are not acceptable we might not get as much zeros as we want)
     Vector3 grid_size;
     Vector3 first_cube_location;
-    public GameObject plane;
+    GameObject plane;
     public int N = 50;//create a (N-2)*(N-2) map with boarder
     public int M = 50;
+    public int numberOfBox = 100;
     ArrayList myMap;
     myDividedArea myAreaDivider;
     ArrayList myGameObjects;
@@ -386,9 +418,9 @@ public class CreateMap : MonoBehaviour
         {
             int i = UnityEngine.Random.Range((int)0, (int)N);
             int j = UnityEngine.Random.Range((int)0, (int)M);
-            if (myAreaDivider.getMapVal(myMap, i, j) == (int) GridType.Free)
+            if (myAreaDivider.getMapVal(myMap, i, j) == (int)GridType.Free)
             {
-                myAreaDivider.setMapVal(myMap, i, j, (int) GridType.Destructible);
+                myAreaDivider.setMapVal(myMap, i, j, (int)GridType.Destructible);
                 GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
                 cube_ij.transform.localScale = iGridSize;

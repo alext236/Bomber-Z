@@ -55,19 +55,32 @@ public class Bomb : MonoBehaviour {
     }
 
     private ArrayList m_enemies;
+    ArrayList Firelength_bomb_i;
+    Vector3 myGridSize;
+    Vector3 myLocationOfFirstCube;
     // Use this for initialization
     void Start() 
     {
-        m_enemies = new ArrayList();
-        m_enemies.Add(GameObject.Find("Enemy"));
-        m_enemies.Add(GameObject.Find("Enemy 1"));
+        GameObject planeInfo = FindObjectOfType<Playground>().gameObject;
+        m_enemies = planeInfo.GetComponent<CreateMap>().getEnemies();
         SetDefaultDistance();
         anim = GetComponent<Animator>();
         Debug.Log(anim);
+        Firelength_bomb_i = new ArrayList();
+
+        CreateMap myMapInfo = FindObjectOfType<Playground>().GetComponent<CreateMap>();
+        myGridSize = myMapInfo.getGridSize();
+        myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
         Invoke("StartExplosionAnimation", timeToExplode);
     }
 
-    private void SetDefaultDistance() 
+    // Update is called once per frame
+    void Update() 
+    {
+        CreateCollider();
+    }
+
+    private void SetDefaultDistance()
     {
         distanceToNearestWall_left = length;
         distanceToNearestWall_right = length;
@@ -75,10 +88,10 @@ public class Bomb : MonoBehaviour {
         distanceToNearestWall_back = length;
     }
 
-    // Update is called once per frame
-    void Update() 
+    Vector3 mPosToMapIndex(Vector3 iPos, Vector3 iLocationOfFirstCube, Vector3 iGridSize)
     {
-        CreateCollider();
+        iPos = iPos - new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]);
+        return new Vector3(iPos[0] / iGridSize[0], 0f, iPos[2] / iGridSize[2]);
     }
 
     //Used as animation event for now
@@ -92,14 +105,21 @@ public class Bomb : MonoBehaviour {
             float max_size = Mathf.Max(mgrid_size[0],mgrid_size[2]);
             if (flagCheckPlayer)
             {
-                FindObjectOfType<PlayerController>().setBombInfo(this.transform.position, fireTime, length * (max_size) + max_size / 2);
+                FindObjectOfType<PlayerController>().setBombInfo(this.transform.position, fireTime, Firelength_bomb_i);
             }
             if (flagCheckEnemy)
             {
                 for (int i = 0; i < m_enemies.Count; i++)
                 {
                     GameObject m_enemy_i = (GameObject)m_enemies[i];
-                    m_enemy_i.GetComponent<EnemyScript>().setBombInfo(this.transform.position, fireTime, length * (max_size) + max_size / 2);
+                    if (m_enemy_i != null)
+                    {
+                        m_enemy_i.GetComponent<EnemyScript>().setBombInfo(this.transform.position, fireTime, Firelength_bomb_i);
+                        Vector3 bombPosition = mPosToMapIndex(transform.position, myLocationOfFirstCube, myGridSize);
+                        bombPosition.x = Mathf.Round(bombPosition.x);
+                        bombPosition.z = Mathf.Round(bombPosition.z);
+                        m_enemy_i.GetComponent<EnemyScript>().updateMapBombPos(bombPosition, false);
+                    }
                 }
             }
         }
@@ -115,12 +135,12 @@ public class Bomb : MonoBehaviour {
 
     void BombImpact() 
     {
-        BombTriggered = true;        
+        BombTriggered = true;
 
-        DrawRaycast(Vector3.left);
-        DrawRaycast(Vector3.right);
         DrawRaycast(Vector3.forward);
         DrawRaycast(Vector3.back);
+        DrawRaycast(Vector3.right);
+        DrawRaycast(Vector3.left);
         DrawRaycast(Vector3.down);
 
         CreateFireParticles();
@@ -220,35 +240,36 @@ public class Bomb : MonoBehaviour {
 
         Debug.DrawLine(pos + new Vector3(0,1,0), new Vector3(0,1,0) + pos + direction * dis, Color.red);
         bool flag_continue = true;
+        float animation_length = length;
         for (int i = 0; i < hit_arr.Count && flag_continue; i++)
         {
             RaycastHit m_hit = (RaycastHit)hit_arr[i];
             if (m_hit.collider.tag == "IndestructibleWall")
             {
-                GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
+                animation_length = GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
                 flag_continue = false;
             }
-            //else if (m_hit.collider.tag == "Wall")
-            //Change this to recognize 'DestructibleWall' class instead ---- Added by Tuan
-            else if (m_hit.collider.GetComponent<DestructibleWall>())      
+            else if (m_hit.collider.GetComponent<DestructibleWall>())//Change this to recognize 'DestructibleWall' class instead 
             {
                 // if the actual fire length is smaller than planned fire length then the time that fire reach to the object is the portion of the planned time
-                float animation_length = GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
-                animation_length = ((animation_length) * max_size + max_size / 2);
+                animation_length = GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
+                animation_length = ((animation_length) * max_size + max_size / 20);
+                Firelength_bomb_i.Add(animation_length);
                 float planned_length = ((length) * max_size + max_size / 2);
                 float ratio_real_planned = animation_length / (planned_length * fireTime);
 
                 for (int j = 0; j < m_enemies.Count; j++)
                 {
                     GameObject m_enemy_j = (GameObject)m_enemies[j];
-                    m_enemy_j.GetComponent<EnemyScript>().mUpdateMyMap(m_hit.collider.gameObject.transform.position);
+                    if (m_enemy_j != null)
+                        m_enemy_j.GetComponent<EnemyScript>().mUpdateMyMap(m_hit.collider.gameObject.transform.position);
                 }
                 //Spawn a powerup based on its drop chance
                 m_hit.collider.GetComponent<DestructibleWall>().SpawnAPowerUp();
 
                 Destroy(m_hit.collider.gameObject, ratio_real_planned * fireTime);
                 flag_continue = false;
-                
+
             }
             flagCheckPlayer = true;
             flagCheckEnemy = true;
@@ -264,6 +285,7 @@ public class Bomb : MonoBehaviour {
 
             }
         }
+        Firelength_bomb_i.Add(animation_length * (max_size) + max_size / 2);
     }
 
     void CreateCollider() 
