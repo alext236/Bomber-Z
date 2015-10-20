@@ -525,6 +525,7 @@ public class EnemyScript : MonoBehaviour
         int ret_i = 1;
         int ret_j = 1;
         int rand_counter = UnityEngine.Random.Range((int)0, (int)max_counter - 1);
+        float m_dis = -max_counter;
         for (int i = 0; i < max_counter && flag_continue; i++)
         {
             if (iRandcol == 0)
@@ -546,13 +547,13 @@ public class EnemyScript : MonoBehaviour
                     index_player_pos.z = Mathf.Round(index_player_pos.z);
 
                     Vector3 found_index = new Vector3(index_i, 0, index_j);
-                    if ((index_player_pos - found_index).magnitude >= 3)
+                    if ((index_player_pos - found_index).magnitude >= m_dis)
                     {
-                        flag_continue = false;
+                        m_dis = (index_player_pos - found_index).magnitude;
+                        ret_i = index_i;
+                        ret_j = index_j;
                     }
                 }
-                ret_i = index_i;
-                ret_j = index_j;
             }
         }
         return new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(ret_i * iGridSize[0], 0f, ret_j * iGridSize[2]);
