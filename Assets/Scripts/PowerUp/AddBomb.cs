@@ -16,16 +16,9 @@ public class AddBomb : MonoBehaviour, IPowerUp
 
     private PlayerController player;
 
-    // Use this for initialization
-    void Start()
+    public void Start()
     {
         player = FindObjectOfType<PlayerController>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
     public void OnTriggerEnter(Collider other)
@@ -36,7 +29,7 @@ public class AddBomb : MonoBehaviour, IPowerUp
             AudioSource.PlayClipAtPoint(sound, transform.position);
             IncreaseNumberOfBombs();
             Destroy(gameObject);
-        }        
+        }
     }
 
     void IncreaseNumberOfBombs()
@@ -58,5 +51,5 @@ public class AddBomb : MonoBehaviour, IPowerUp
     {
         return gameObject;
     }
-    
+
 }

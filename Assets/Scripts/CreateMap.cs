@@ -231,13 +231,14 @@ public class CreateMap : MonoBehaviour
 
     public GameObject EnemyInfo;
     ArrayList myEnemies;
-    int EnemyNumbers = 5;
-
+    public int EnemyNumbers = 5;
+    public int numberOfFollowingEnemies = 5;
+    //Add a selection of enemies randomized
     void initialization() /////////////////////////////////////////////////////////////////////Do everything related to the level here: initialization for level
     {
         int mLevel = Application.loadedLevel;
-        EnemyNumbers = 1;//3 * mLevel + 2;
-        int numberOfFollowingEnemies = 2;
+        //EnemyNumbers = 5;//3 * mLevel + 2;
+        //int numberOfFollowingEnemies = 5;
         myEnemies = new ArrayList();
         for (int i = 0; i < EnemyNumbers; i++)
         {

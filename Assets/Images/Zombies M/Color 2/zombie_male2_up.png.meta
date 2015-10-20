@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: a15282057ad7b4450a31f36b80e750a8
-timeCreated: 1445268428
+timeCreated: 1445289606
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -47,7 +47,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: .5, y: .5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 200
   alphaIsTransparency: 1
   textureType: 8
   buildTargetSettings: []
@@ -60,7 +60,7 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: zombie_male2_up_1
@@ -70,7 +70,7 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: zombie_male2_up_2
@@ -80,7 +80,7 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: zombie_male2_up_3
@@ -90,7 +90,7 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 

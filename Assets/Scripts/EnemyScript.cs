@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class EnemyScript : MonoBehaviour {
+public class EnemyScript : MonoBehaviour
+{
     public class mySortClass : IComparer
     {
         int IComparer.Compare(object x, object y)
@@ -79,7 +80,7 @@ public class EnemyScript : MonoBehaviour {
     public float EnemySpeed = 0.1f;
     public myEnemyType EnemyType = myEnemyType.FollowingPlayer;
     public bool respawnedable = true;
-//    NavMeshAgent m_Agent;
+    //    NavMeshAgent m_Agent;
 
     public void setEnemyType(myEnemyType iEnemyType) { EnemyType = iEnemyType; }
 
@@ -102,8 +103,14 @@ public class EnemyScript : MonoBehaviour {
     ArrayList myUpdatedPath;
     bool flag_update_path = true;
     Vector3 EscapeTileBombPos;
+
+    //For animations
+    private Animator anim;
+    private Vector3 nextPos;
+    public AudioClip enemySound;
+
     // Use this for initialization
-	void Start () 
+    void Start()
     {
         delta_time = new ArrayList();
         check_hit_bomb = new ArrayList();
@@ -111,13 +118,16 @@ public class EnemyScript : MonoBehaviour {
         last_bomb_pos = new ArrayList();
         bombFireLength = new ArrayList();
         bombFireTime = new ArrayList();
-//        m_Agent = GetComponent<NavMeshAgent>();
-	}
+        //        m_Agent = GetComponent<NavMeshAgent>();
 
-	// Update is called once per frame
-	void Update ()
+        //Setting up anim
+        anim = GetComponent<Animator>();
+    }
+
+    // Update is called once per frame
+    void Update()
     {
-//        m_Agent.destination = TragetPos;
+        //        m_Agent.destination = TragetPos;
         if (!updated_env)
         {
             myMapInfo = FindObjectOfType<CreateMap>();
@@ -128,7 +138,7 @@ public class EnemyScript : MonoBehaviour {
             transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
             setTargetPos(transform.position - new Vector3(0f, this.transform.position[1], 0f), false);
             updated_env = true;
-            
+
         }
 
         if (EnemyType == myEnemyType.NotFollowingPlayer)
@@ -186,7 +196,9 @@ public class EnemyScript : MonoBehaviour {
 
         mMoveOnThePath(myUpdatedPath, myLocationOfFirstCube, myGridSize);
         checkBombHitEnemy();
-	}
+
+
+    }
 
     bool DoesRaycastHitObject(Vector3 originPos)
     {
@@ -225,7 +237,7 @@ public class EnemyScript : MonoBehaviour {
     {
         Vector3 mindex_cube = mPosToMapIndex(iDeletedPosCube, myLocationOfFirstCube, myGridSize);
         ArrayList mCol_x = (ArrayList)myMap[(int)mindex_cube[0]];
-        mCol_x[(int)mindex_cube[2]] = (int)CreateMap.GridType.Free;
+        mCol_x[(int) mindex_cube[2]] = (int) CreateMap.GridType.Free;
         flag_update_path = true;
     }
 
@@ -238,7 +250,7 @@ public class EnemyScript : MonoBehaviour {
             ArrayList iCol = (ArrayList)iMap[i];
             for (int j = 0; j < iCol.Count; j++)
             {
-                nCol.Add((int)iCol[j]);
+                nCol.Add((int) iCol[j]);
             }
             cMap.Add(nCol);
         }
@@ -262,6 +274,38 @@ public class EnemyScript : MonoBehaviour {
 
     }
 
+    void SetEnemyAnimation(Vector3 nextPos, Vector3 currentPos)
+    {
+
+        if (nextPos.z > currentPos.z)
+        {
+            SetBoolAnimation("MoveUp");
+        }
+        else if (nextPos.z < currentPos.z)
+        {
+            SetBoolAnimation("MoveDown");
+        }
+        else if (nextPos.x > currentPos.x)
+        {
+            SetBoolAnimation("MoveRight");
+        }
+        else if (nextPos.x < currentPos.x)
+        {
+            SetBoolAnimation("MoveLeft");
+        }
+
+    }
+
+    void SetBoolAnimation(string directionBool)
+    {
+        anim.SetBool("MoveLeft", false);
+        anim.SetBool("MoveRight", false);
+        anim.SetBool("MoveUp", false);
+        anim.SetBool("MoveDown", false);
+
+        anim.SetBool(directionBool, true);
+    }
+
     void mMoveOnThePath(ArrayList iUpdatedPath, Vector3 iLocationOfFirstCube, Vector3 iGridSize)/////////////////////////////////////////////Koursoh: Move Enemy on the path
     {
         if (iUpdatedPath == null)
@@ -270,7 +314,7 @@ public class EnemyScript : MonoBehaviour {
             return;
         Vector3 m_MapIndex = (Vector3)iUpdatedPath[iUpdatedPath.Count-1];
         Vector3 m_next_pos = mMapIndexToPos(m_MapIndex, iLocationOfFirstCube, iGridSize);
-        float m_dis = (m_next_pos - this.transform.position).magnitude;
+        float m_dis = (m_next_pos - this.transform.position).magnitude; //detect enemy direction here
         if (m_dis <= Mathf.Abs(EnemySpeed))
         {
             //this.transform.position = m_next_pos;
@@ -280,10 +324,15 @@ public class EnemyScript : MonoBehaviour {
         {
             //this.transform.position += EnemySpeed * ((m_next_pos - this.transform.position) / m_dis);
             m_next_pos = this.transform.position + EnemySpeed * ((m_next_pos - this.transform.position) / m_dis);
+
         }
+        //Animation stuff
+        SetEnemyAnimation(m_next_pos, transform.position);
+
         if (!DoesRaycastHitObject(m_next_pos))
         {
             this.transform.position = m_next_pos;
+
         }
     }
 
@@ -306,15 +355,15 @@ public class EnemyScript : MonoBehaviour {
 
     int getMapVal(ArrayList iMap, int i, int j)
     {
-        if (i >= iMap.Count || j >= ((ArrayList)iMap[0]).Count)
+        if (i >= iMap.Count || j >= ((ArrayList) iMap[0]).Count)
             return -1;
         ArrayList col_i = (ArrayList)iMap[i]; //each index_i in the map returns a column on the X direction
-        return (int)col_i[j];
+        return (int) col_i[j];
     }
 
     bool isFreePointOnMap(ArrayList iUpdatedMap, Vector3 i3Dindex)
     {
-        if (getMapVal(iUpdatedMap, (int)i3Dindex[0], (int)i3Dindex[2]) == (int)CreateMap.GridType.Free)
+        if (getMapVal(iUpdatedMap, (int) i3Dindex[0], (int) i3Dindex[2]) == (int) CreateMap.GridType.Free)
             return true;
         return false;
     }
@@ -327,14 +376,14 @@ public class EnemyScript : MonoBehaviour {
         {
             if (iUpdatedPath.Count != 0)
             {
-                start = (Vector3)iUpdatedPath[iUpdatedPath.Count - 1];
+                start = (Vector3) iUpdatedPath[iUpdatedPath.Count - 1];
             }
         }
 
         AStarNode p_node = new AStarNode(start, end, null);
         ArrayList updated_map = getUpdatedMap();
         ArrayList open_list = new ArrayList();
-        
+
         open_list.Add(p_node);
         ArrayList closed_list = new ArrayList();
 
@@ -376,7 +425,7 @@ public class EnemyScript : MonoBehaviour {
             closed_list.Add(best_node);
         }
         int index_closest_node = p_node.mFindNodeByMinVal(end_points);
-        
+
         if (index_closest_node != -1)
         {
             AStarNode c_node = (AStarNode)end_points[index_closest_node];
@@ -396,13 +445,13 @@ public class EnemyScript : MonoBehaviour {
         int max_counter = 0;
         if (onX)
         {
-            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.M - 1);
-            max_counter = (int)myMapInfo.N;
+            rand_pos = UnityEngine.Random.Range((int) 1, (int) myMapInfo.M - 1);
+            max_counter = (int) myMapInfo.N;
         }
         else
         {
-            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.N - 1);
-            max_counter = (int)myMapInfo.M;
+            rand_pos = UnityEngine.Random.Range((int) 1, (int) myMapInfo.N - 1);
+            max_counter = (int) myMapInfo.M;
         }
         int index_i = 0;
         int index_j = 0;
@@ -421,7 +470,7 @@ public class EnemyScript : MonoBehaviour {
                 index_i = i;
                 index_j = rand_pos;
             }
-            if (getMapVal(myMap, index_i, index_j) == (int)CreateMap.GridType.Free)
+            if (getMapVal(myMap, index_i, index_j) == (int) CreateMap.GridType.Free)
             {
                 if (i >= rand_counter)
                 {
@@ -447,7 +496,7 @@ public class EnemyScript : MonoBehaviour {
             for (int j = iMap_col.Count - 1; j >= 0 && flag_continue; j--)
             {
                 int val_ij = (int)iMap_col[j];
-                if (val_ij == (int)CreateMap.GridType.Free)
+                if (val_ij == (int) CreateMap.GridType.Free)
                 {
                     if (m_count >= iCount)
                     {
@@ -489,8 +538,8 @@ public class EnemyScript : MonoBehaviour {
             bool mHit_flag = false;
             for (int i = 0; i < check_hit_bomb.Count && !mHit_flag; i++)
             {
-                delta_time[i] = (float)(delta_time[i]) + Time.deltaTime;
-                if ((float)(delta_time[i]) > (float)(bombFireTime[i]))
+                delta_time[i] = (float) (delta_time[i]) + Time.deltaTime;
+                if ((float) (delta_time[i]) > (float) (bombFireTime[i]))
                 {
                     check_hit_bomb[i] = false;
                 }
@@ -500,7 +549,7 @@ public class EnemyScript : MonoBehaviour {
 
                 for (int j = 0; j < 5 && !mHit_flag; j++)
                 {
-                    if ((bool) ((ArrayList) check_directions_forEachBomb[i])[j] && dis <= (float)((ArrayList)bombFireLength[i])[j] && (bool)check_hit_bomb[i])
+                    if ((bool) ((ArrayList) check_directions_forEachBomb[i])[j] && dis <= (float) ((ArrayList) bombFireLength[i])[j] && (bool) check_hit_bomb[i])
                     {
                         //cast rays on different directions
                         Vector3 mDir = getDirection(j);
@@ -528,7 +577,7 @@ public class EnemyScript : MonoBehaviour {
                         for (int k = 0; k < hit_arr.Count && flag_continue_on_ray; k++)
                         {
                             RaycastHit m_hit = (RaycastHit)hit_arr[k];
-                            Debug.DrawLine(pos, pos + mDir * ray_dis * (float)delta_time[i], Color.red);
+                            Debug.DrawLine(pos, pos + mDir * ray_dis * (float) delta_time[i], Color.red);
                             if (m_hit.transform.name == this.transform.name)
                             {
                                 //Do something to the player
@@ -541,7 +590,7 @@ public class EnemyScript : MonoBehaviour {
                             if (m_hit.transform.name == "Cube")
                             {
                                 flag_continue_on_ray = false;
-                                ((ArrayList)check_directions_forEachBomb[i])[j] = false;
+                                ((ArrayList) check_directions_forEachBomb[i])[j] = false;
                             }
                         }
                     }//if direction j of bomb i
@@ -550,7 +599,7 @@ public class EnemyScript : MonoBehaviour {
 
             for (int i = 0; i < check_hit_bomb.Count; i++)
             {
-                if (!(bool)(check_hit_bomb[i]))
+                if (!(bool) (check_hit_bomb[i]))
                 {
                     check_hit_bomb.RemoveAt(i);
                     delta_time.RemoveAt(i);
@@ -574,7 +623,7 @@ public class EnemyScript : MonoBehaviour {
                 {
                     DestroyObject(gameObject);
                 }
-//                m_Agent.nextPosition = this.transform.position;
+                //                m_Agent.nextPosition = this.transform.position;
             }
         }
     }
@@ -596,7 +645,7 @@ public class EnemyScript : MonoBehaviour {
         check_directions_forEachBomb.Add(new ArrayList());
         for (int i = 0; i < 5; i++)
         {
-            ((ArrayList)check_directions_forEachBomb[check_directions_forEachBomb.Count - 1]).Add(true);
+            ((ArrayList) check_directions_forEachBomb[check_directions_forEachBomb.Count - 1]).Add(true);
         }
 
         //delta_time
@@ -630,7 +679,7 @@ public class EnemyScript : MonoBehaviour {
 
     void setMapVal(ArrayList iMap, int i, int j, int iVal)
     {
-        if (i >= iMap.Count || j >= ((ArrayList)iMap[0]).Count)
+        if (i >= iMap.Count || j >= ((ArrayList) iMap[0]).Count)
             return;
         ArrayList col_i = (ArrayList)iMap[i]; //each index_i in the map returns a column on the X direction
         col_i[j] = iVal;
@@ -640,7 +689,7 @@ public class EnemyScript : MonoBehaviour {
     {
         if (isBomb)
         {
-            setMapVal(myMap, (int)iBombPos[0], (int)iBombPos[2], (int)CreateMap.GridType.Bomb);
+            setMapVal(myMap, (int) iBombPos[0], (int) iBombPos[2], (int) CreateMap.GridType.Bomb);
             Vector3 real_bombPos = mMapIndexToPos(iBombPos, myLocationOfFirstCube, myGridSize);
             Vector3 dis_player_bomb = transform.position - real_bombPos;
             if (Mathf.Abs(dis_player_bomb[0]) < myGridSize[0] && Mathf.Abs(dis_player_bomb[2]) < myGridSize[2])
@@ -649,7 +698,12 @@ public class EnemyScript : MonoBehaviour {
             }
         }
         else
-            setMapVal(myMap, (int)iBombPos[0], (int)iBombPos[2], (int)CreateMap.GridType.Free);
+            setMapVal(myMap, (int) iBombPos[0], (int) iBombPos[2], (int) CreateMap.GridType.Free);
         flag_update_path = true;
+    }
+
+    public void PlayEnemySound()
+    {
+        AudioSource.PlayClipAtPoint(enemySound, transform.position, 0.15f);
     }
 }

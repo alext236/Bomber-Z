@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 9b83bc41148084cbea3e6ff1169b0cb2
-timeCreated: 1445268039
+timeCreated: 1445289336
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -47,7 +47,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: .5, y: .5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 200
   alphaIsTransparency: 1
   textureType: 8
   buildTargetSettings: []
@@ -60,8 +60,8 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
-      pivot: {x: 0, y: 0}
+      alignment: 0
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: zombie_female1_down_1
       rect:
@@ -70,8 +70,8 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
-      pivot: {x: 0, y: 0}
+      alignment: 0
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: zombie_female1_down_2
       rect:
@@ -80,8 +80,8 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
-      pivot: {x: 0, y: 0}
+      alignment: 0
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: zombie_female1_down_3
       rect:
@@ -90,8 +90,8 @@ TextureImporter:
         y: 0
         width: 160
         height: 160
-      alignment: 1
-      pivot: {x: 0, y: 0}
+      alignment: 0
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
   userData: 
