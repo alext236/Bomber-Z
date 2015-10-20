@@ -60,11 +60,9 @@ public class Bomb : MonoBehaviour {
     Vector3 myGridSize;
     Vector3 myLocationOfFirstCube;
     // Use this for initialization
+    bool flag_got_info = false;
     void Start() 
     {
-        mPlayerInfo = FindObjectOfType<PlayerController>();
-        GameObject planeInfo = FindObjectOfType<Playground>().gameObject;
-        m_enemies = planeInfo.GetComponent<CreateMap>().getEnemies();
         SetDefaultDistance();
         anim = GetComponent<Animator>();
         Debug.Log(anim);
@@ -79,6 +77,12 @@ public class Bomb : MonoBehaviour {
     // Update is called once per frame
     void Update() 
     {
+        if (!flag_got_info)
+        {
+            mPlayerInfo = FindObjectOfType<PlayerController>();
+            GameObject planeInfo = FindObjectOfType<Playground>().gameObject;
+            m_enemies = planeInfo.GetComponent<CreateMap>().getEnemies();
+        }
         CreateCollider();
     }
 

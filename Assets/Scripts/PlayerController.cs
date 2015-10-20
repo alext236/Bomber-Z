@@ -363,6 +363,8 @@ public class PlayerController : MonoBehaviour
 
     bool DoesRaycastHitObject(Vector3 originPos)
     {
+        if (originPos[1] == 0)
+            originPos[1] = 1.5f;
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
         Ray newRay = new Ray(originPos, Vector3.down);      //Seems like Vector3.down works well
 

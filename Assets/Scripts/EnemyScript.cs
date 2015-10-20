@@ -109,7 +109,7 @@ public class EnemyScript : MonoBehaviour
     //For animations
     private Animator anim;
     public AudioClip enemySound;
-
+    bool flag_hit_player = false;
     // Use this for initialization
     void Start()
     {
@@ -136,12 +136,13 @@ public class EnemyScript : MonoBehaviour
             myGridSize = myMapInfo.getGridSize();
             myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
             myMap = myMakeCopyOf(myMapInfo.GetMyMap());
-            transform.position = myFindRandomPlace(myMap, myLocationOfFirstCube, myGridSize, true) + new Vector3(0f, transform.position[1], 0f); //LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
+            int rand_col = UnityEngine.Random.Range((int)0, (int)2);
+            transform.position = myFindFirstRandomPlace(myMap, myLocationOfFirstCube, myGridSize, mPlayerInfo.transform.position, rand_col) + new Vector3(0f, transform.position[1], 0f);
             setTargetPos(transform.position - new Vector3(0f, this.transform.position[1], 0f), false);
             updated_env = true;
 
         }
-
+        flag_hit_player = false;
         if (EnemyType == myEnemyType.NotFollowingPlayer)
         {
             float threshold = Mathf.Abs(EnemySpeed);
@@ -203,6 +204,8 @@ public class EnemyScript : MonoBehaviour
 
     bool DoesRaycastHitObject(Vector3 originPos)
     {
+        if (originPos[1] == 0)
+            originPos[1] = 1.5f;
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
         Ray newRay = new Ray(originPos, Vector3.down);      //Seems like Vector3.down works well
 
@@ -229,13 +232,21 @@ public class EnemyScript : MonoBehaviour
                 else
                     return true;//enemy cannot get closer to the bomb
             }
-            if (hit[i].transform.name == mPlayerInfo.name)
+            if (hit[i].transform.name == mPlayerInfo.name && !flag_hit_player)
             {
-                mPlayerInfo.HitPlayer();
+                HitPlayer();
+                return true;
             }
         }
 
         return false;
+    }
+
+    void HitPlayer()/////////////////////////////////////////////////////////////////////////Kourosh: Do sth on hitting player
+    {
+        mPlayerInfo.HitPlayer();
+        mRestartPos();
+        flag_hit_player = true;
     }
 
     public void mUpdateMyMap(Vector3 iDeletedPosCube)
@@ -314,9 +325,15 @@ public class EnemyScript : MonoBehaviour
     void mMoveOnThePath(ArrayList iUpdatedPath, Vector3 iLocationOfFirstCube, Vector3 iGridSize)//Move Enemy on the path
     {
         if (iUpdatedPath == null)
+        {
+            DoesRaycastHitObject(transform.position);
             return;
+        }
         if (iUpdatedPath.Count == 0)
+        {
+            DoesRaycastHitObject(transform.position);
             return;
+        }
         Vector3 m_MapIndex = (Vector3)iUpdatedPath[iUpdatedPath.Count-1];
         Vector3 m_next_pos = mMapIndexToPos(m_MapIndex, iLocationOfFirstCube, iGridSize);
         float m_dis = (m_next_pos - this.transform.position).magnitude; //detect enemy direction here
@@ -488,6 +505,59 @@ public class EnemyScript : MonoBehaviour
         return new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(ret_i * iGridSize[0], 0f, ret_j * iGridSize[2]);
     }
 
+    Vector3 myFindFirstRandomPlace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize, Vector3 iPlayerPos, int iRandcol)
+    {
+        bool flag_continue = true;
+        int rand_pos = 1;
+        int max_counter = 0;
+        if (iRandcol == 0)
+        {
+            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.M - 1);
+            max_counter = (int)myMapInfo.N;
+        }
+        else
+        {
+            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.N - 1);
+            max_counter = (int)myMapInfo.M;
+        }
+        int index_i = 0;
+        int index_j = 0;
+        int ret_i = 1;
+        int ret_j = 1;
+        int rand_counter = UnityEngine.Random.Range((int)0, (int)max_counter - 1);
+        for (int i = 0; i < max_counter && flag_continue; i++)
+        {
+            if (iRandcol == 0)
+            {
+                index_i = rand_pos;
+                index_j = i;
+            }
+            else
+            {
+                index_i = i;
+                index_j = rand_pos;
+            }
+            if (getMapVal(myMap, index_i, index_j) == (int)CreateMap.GridType.Free)
+            {
+                if (i >= rand_counter)
+                {
+                    Vector3 index_player_pos = mPosToMapIndex(iPlayerPos, iLocationOfFirstCube, iGridSize);
+                    index_player_pos.x = Mathf.Round(index_player_pos.x);
+                    index_player_pos.z = Mathf.Round(index_player_pos.z);
+
+                    Vector3 found_index = new Vector3(index_i, 0, index_j);
+                    if ((index_player_pos - found_index).magnitude >= 3)
+                    {
+                        flag_continue = false;
+                    }
+                }
+                ret_i = index_i;
+                ret_j = index_j;
+            }
+        }
+        return new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(ret_i * iGridSize[0], 0f, ret_j * iGridSize[2]);
+    }
+
     //Find the ith last available free tile
     Vector3 LocateFirstAvailableSpace(ArrayList iMap, Vector3 iLocationOfFirstCube, Vector3 iGridSize, int iCount)
     {
@@ -626,9 +696,7 @@ public class EnemyScript : MonoBehaviour
                     mPlayerInfo.IncreasePlayerPoint((float)myEnemyPoints.NotFollowingPlayer, PlayerController.myPointType.Enemy);
                 if (this.respawnedable)
                 {
-                    this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
-                    myUpdatedPath.Clear();
-                    flag_update_path = true;
+                    
                 }
                 else
                 {
@@ -637,6 +705,14 @@ public class EnemyScript : MonoBehaviour
                 //                m_Agent.nextPosition = this.transform.position;
             }
         }
+    }
+
+    void mRestartPos()
+    {
+        int rand_col = UnityEngine.Random.Range((int)0, (int)2);
+        transform.position = myFindFirstRandomPlace(myMap, myLocationOfFirstCube, myGridSize, mPlayerInfo.transform.position, rand_col) + new Vector3(0f, transform.position[1], 0f);
+        myUpdatedPath.Clear();
+        flag_update_path = true;
     }
 
     public void setBombInfo(Vector3 iBombPos, float iFireTime, ArrayList iMaxLength)
