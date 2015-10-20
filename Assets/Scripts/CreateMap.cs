@@ -244,6 +244,7 @@ public class CreateMap : MonoBehaviour
         {
             GameObject newEnemy = Instantiate(EnemyInfo) as GameObject;
             newEnemy.name = "Enemy" + i.ToString();
+            newEnemy.GetComponent<BoxCollider>().size = new Vector3(1.0f, 1.0f, 1.0f);
             EnemyScript mEnemy_i_script = newEnemy.GetComponent<EnemyScript>();
             mEnemy_i_script.setEnemyType(EnemyScript.myEnemyType.NotFollowingPlayer);
             mEnemy_i_script.Enemy_ith_Place = i;
@@ -287,6 +288,11 @@ public class CreateMap : MonoBehaviour
 
     }
 
+    public void LoadCurLevel()
+    {
+        Application.LoadLevel(Application.loadedLevel);
+    }
+
     public ArrayList getEnemies() { return myEnemies; }
     
     public Vector3 getGridSize()
@@ -314,6 +320,7 @@ public class CreateMap : MonoBehaviour
     ArrayList myMap;
     myDividedArea myAreaDivider;
     ArrayList myGameObjects;
+    int numberOfDestroyableCubes = 0;
     ///////////
 
     void initializing_Map(int iN, int iM)
@@ -415,6 +422,7 @@ public class CreateMap : MonoBehaviour
             }
         }
 
+        numberOfDestroyableCubes = 0;
         for (int k = 0; k < numberOfBox; k++)
         {
             int i = UnityEngine.Random.Range((int)0, (int)N);
@@ -450,9 +458,12 @@ public class CreateMap : MonoBehaviour
                 cube_ij.GetComponent<MeshRenderer>().material = newMaterial;
                 //cube_ij.AddComponent<Material>();
                 myGameObjects.Add(cube_ij);
+                numberOfDestroyableCubes++;
             }
         }
     }
 
+    public int getNumberOfEnemies() { return EnemyNumbers; }
 
+    public int getNumberOfDestroyableCubes() { return numberOfDestroyableCubes; }
 }

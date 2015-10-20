@@ -14,7 +14,7 @@ public class IncreaseFireLength : MonoBehaviour, IPowerUp
 
     //Temporarily used for comparer
     //private int personalValue = 1;
-    
+
     public void OnTriggerEnter(Collider other)
     {
         if (other.GetComponent<PlayerController>())

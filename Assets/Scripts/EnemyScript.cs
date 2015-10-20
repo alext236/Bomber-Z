@@ -75,6 +75,8 @@ public class EnemyScript : MonoBehaviour
 
     public enum myEnemyType { FollowingPlayer = 0, NotFollowingPlayer = 1 };
 
+    public enum myEnemyPoints { FollowingPlayer = 10, NotFollowingPlayer = 5};//////////////////////////////////////Kourosh:Define Points for killing enemy here
+
     public Vector3 TragetPos;
     public int Enemy_ith_Place = 0;
     public float EnemySpeed = 0.1f;
@@ -106,7 +108,6 @@ public class EnemyScript : MonoBehaviour
 
     //For animations
     private Animator anim;
-    private Vector3 nextPos;
     public AudioClip enemySound;
 
     // Use this for initialization
@@ -135,7 +136,7 @@ public class EnemyScript : MonoBehaviour
             myGridSize = myMapInfo.getGridSize();
             myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
             myMap = myMakeCopyOf(myMapInfo.GetMyMap());
-            transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
+            transform.position = myFindRandomPlace(myMap, myLocationOfFirstCube, myGridSize, true) + new Vector3(0f, transform.position[1], 0f); //LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
             setTargetPos(transform.position - new Vector3(0f, this.transform.position[1], 0f), false);
             updated_env = true;
 
@@ -228,6 +229,10 @@ public class EnemyScript : MonoBehaviour
                 else
                     return true;//enemy cannot get closer to the bomb
             }
+            if (hit[i].transform.name == mPlayerInfo.name)
+            {
+                mPlayerInfo.HitPlayer();
+            }
         }
 
         return false;
@@ -306,7 +311,7 @@ public class EnemyScript : MonoBehaviour
         anim.SetBool(directionBool, true);
     }
 
-    void mMoveOnThePath(ArrayList iUpdatedPath, Vector3 iLocationOfFirstCube, Vector3 iGridSize)/////////////////////////////////////////////Koursoh: Move Enemy on the path
+    void mMoveOnThePath(ArrayList iUpdatedPath, Vector3 iLocationOfFirstCube, Vector3 iGridSize)//Move Enemy on the path
     {
         if (iUpdatedPath == null)
             return;
@@ -539,7 +544,7 @@ public class EnemyScript : MonoBehaviour
             for (int i = 0; i < check_hit_bomb.Count && !mHit_flag; i++)
             {
                 delta_time[i] = (float) (delta_time[i]) + Time.deltaTime;
-                if ((float) (delta_time[i]) > (float) (bombFireTime[i]))
+                if ((float)(delta_time[i]) > 1.3f * (float)(bombFireTime[i]))
                 {
                     check_hit_bomb[i] = false;
                 }
@@ -555,6 +560,8 @@ public class EnemyScript : MonoBehaviour
                         Vector3 mDir = getDirection(j);
                         Vector3 pos = (Vector3)last_bomb_pos[i];
                         float ray_dis = ((float)((ArrayList)bombFireLength[i])[j]) * (float)delta_time[i];
+                        if ((float)delta_time[i] > 1.0f)
+                            ray_dis = ((float)((ArrayList)bombFireLength[i])[j]);
                         if (mDir == Vector3.down)
                         {
                             pos -= 3 * mDir;
@@ -613,6 +620,10 @@ public class EnemyScript : MonoBehaviour
 
             if (mHit_flag)
             {
+                if (EnemyType == myEnemyType.FollowingPlayer)
+                    mPlayerInfo.IncreasePlayerPoint((float)myEnemyPoints.FollowingPlayer, PlayerController.myPointType.Enemy);
+                else
+                    mPlayerInfo.IncreasePlayerPoint((float)myEnemyPoints.NotFollowingPlayer, PlayerController.myPointType.Enemy);
                 if (this.respawnedable)
                 {
                     this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize, Enemy_ith_Place) + new Vector3(0f, transform.position[1], 0f);
@@ -704,6 +715,9 @@ public class EnemyScript : MonoBehaviour
 
     public void PlayEnemySound()
     {
-        AudioSource.PlayClipAtPoint(enemySound, transform.position, 0.15f);
+        float dis_to_player = (mPlayerInfo.transform.position-transform.position).magnitude;
+        float threshold = 10.0f;
+        if (dis_to_player < threshold)
+            AudioSource.PlayClipAtPoint(enemySound, transform.position, 1 / dis_to_player);
     }
 }

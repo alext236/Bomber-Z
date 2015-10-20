@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 public class PlayerController : MonoBehaviour
 {
-
+    
     public class mySortClass : IComparer
     {
         int IComparer.Compare(object x, object y)
@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public enum myPointType{Enemy = 0, Cube = 1};
+
     [Range(1f, 10f)]
     public float speed;
     [Range(1, 10)]      /////////////////Add limit on bombs. Consider setting static
@@ -26,6 +28,11 @@ public class PlayerController : MonoBehaviour
     public AudioClip[] footStepSound;
     public AudioClip placeBombSound;
     public AudioClip playerHurtSound;
+
+    public int PlayerHealth = 5;
+    float PlayerPoints = 0.0f;
+    int numberOfKilledEnemy = 0;
+    int numberOfDestroyedCubes = 0;
 
     private Animator anim;
 
@@ -57,9 +64,6 @@ public class PlayerController : MonoBehaviour
         bombFireLength = new ArrayList();
         bombFireTime = new ArrayList();
 
-        planeInfo = FindObjectOfType<Playground>().gameObject;
-        m_enemy_i = planeInfo.GetComponent<CreateMap>().getEnemies();
-
         //For setting up anim
         anim = GetComponent<Animator>();
     }
@@ -90,6 +94,25 @@ public class PlayerController : MonoBehaviour
             GameObject mEnemy = (GameObject)m_enemy_i[i];
             if (mEnemy != null)
                 ((GameObject)m_enemy_i[i]).GetComponent<EnemyScript>().setTargetPos(this.transform.position, true);
+        }
+        if (PlayerHealth <= 0)
+        {
+            FinishScenePlayerDied();
+        }
+
+        GoToNextLevel();
+    }
+
+    void FinishScenePlayerDied()///////////////////////////////////////////////////////////////////////////////////////////////////////Kourosh Finish scene
+    {
+        myMapInfo.LoadCurLevel();////////////////////////////////////////////////////////TODO: to sth when you died
+    }
+
+    void GoToNextLevel()///////////////////////////////////////////////////////////////////////////////////////////////////////Kourosh Next Level
+    {
+        if (myMapInfo.getNumberOfEnemies() == numberOfKilledEnemy)
+        {
+            //////////////////////////////////////////////////////////////TODO: go to next level
         }
     }
 
@@ -229,7 +252,7 @@ public class PlayerController : MonoBehaviour
             for (int i = 0; i < check_hit_bomb.Count && !mHit_flag; i++)
             {
                 delta_time[i] = (float) (delta_time[i]) + Time.deltaTime;
-                if ((float) (delta_time[i]) > (float) (bombFireTime[i]))
+                if ((float) (delta_time[i]) > 1.3f*(float) (bombFireTime[i]))
                 {
                     check_hit_bomb[i] = false;
                 }
@@ -246,10 +269,12 @@ public class PlayerController : MonoBehaviour
                         Vector3 mDir = getDirection(j);
                         Vector3 pos = (Vector3)last_bomb_pos[i];
                         float ray_dis = ((float)((ArrayList)bombFireLength[i])[j]) * (float)delta_time[i];
+                        if ((float)delta_time[i] > 1.0f)
+                            ray_dis = ((float)((ArrayList)bombFireLength[i])[j]);
                         if (mDir == Vector3.down)
                         {
+                            ray_dis = 5 * ((float)((ArrayList)bombFireLength[i])[j]);
                             pos -= 3 * mDir;
-                            ray_dis = 5 * ray_dis;
                         }
                         Ray impactRay = new Ray(pos, mDir);
                         RaycastHit[] hit = Physics.RaycastAll(impactRay, ray_dis);
@@ -304,7 +329,9 @@ public class PlayerController : MonoBehaviour
             }
 
             if (mHit_flag)
-                this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize) + new Vector3(0f, transform.position[1], 0f);
+            {
+                HitPlayer();
+            }
         }
     }
 
@@ -312,7 +339,9 @@ public class PlayerController : MonoBehaviour
     {
         if (!flag_got_map_info)
         {
+            planeInfo = FindObjectOfType<Playground>().gameObject;
             myMapInfo = planeInfo.GetComponent<CreateMap>();
+            m_enemy_i = myMapInfo.getEnemies();
             myGridSize = myMapInfo.getGridSize();
             myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
             myMap = myMapInfo.GetMyMap();
@@ -332,7 +361,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    bool DoesRaycastHitObject(Vector3 originPos, Vector3 iPos, Vector3 iLastPos)
+    bool DoesRaycastHitObject(Vector3 originPos)
     {
         Vector3 originPosMirror = new Vector3(originPos.x, -originPos.y, originPos.z);
         Ray newRay = new Ray(originPos, Vector3.down);      //Seems like Vector3.down works well
@@ -370,28 +399,28 @@ public class PlayerController : MonoBehaviour
         Vector3 last_pos = iPos - iDisplacement;
         //Draw a RayCast on lower left of player sprite
         Vector3 p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos))
+        if (DoesRaycastHitObject(p1))
         {
             return false;
         }
 
         //Draw a RayCast on upper left of player sprite
         p1 = iPos + new Vector3(-iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos))
+        if (DoesRaycastHitObject(p1))
         {
             return false;
         }
 
         //Draw a RayCast on lower right of player sprite
         p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, -iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos))
+        if (DoesRaycastHitObject(p1))
         {
             return false;
         }
 
         //Draw a RayCast on upper right of player sprite
         p1 = iPos + new Vector3(iPlayerSize[0] / 2, 1f, iPlayerSize[2] / 2);
-        if (DoesRaycastHitObject(p1, iPos, last_pos))
+        if (DoesRaycastHitObject(p1))
         {
             return false;
         }
@@ -526,5 +555,20 @@ public class PlayerController : MonoBehaviour
     public void addEscapingTilePos(Vector3 iTilePos)
     {
         EscapeTileBombPos = iTilePos;
+    }
+
+    public void HitPlayer()
+    {
+        this.transform.position = LocateFirstAvailableSpace(myMap, myLocationOfFirstCube, myGridSize) + new Vector3(0f, transform.position[1], 0f);
+        PlayerHealth--;
+    }
+
+    public void IncreasePlayerPoint(float iPoints, myPointType iPointType)
+    {
+        PlayerPoints += iPoints;
+        if (iPointType == myPointType.Enemy)
+            numberOfKilledEnemy++;
+        if (iPointType == myPointType.Cube)
+            numberOfDestroyedCubes++;
     }
 }

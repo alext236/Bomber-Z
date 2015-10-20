@@ -54,6 +54,7 @@ public class Bomb : MonoBehaviour {
         }
     }
 
+    PlayerController mPlayerInfo;
     private ArrayList m_enemies;
     ArrayList Firelength_bomb_i;
     Vector3 myGridSize;
@@ -61,6 +62,7 @@ public class Bomb : MonoBehaviour {
     // Use this for initialization
     void Start() 
     {
+        mPlayerInfo = FindObjectOfType<PlayerController>();
         GameObject planeInfo = FindObjectOfType<Playground>().gameObject;
         m_enemies = planeInfo.GetComponent<CreateMap>().getEnemies();
         SetDefaultDistance();
@@ -225,7 +227,7 @@ public class Bomb : MonoBehaviour {
         Vector3 pos = transform.position;
         if (direction == Vector3.down)
             pos -= 3*Vector3.down;
-        float dis = (length * max_size + max_size/2) * fireTime;
+        float dis = (length * max_size + max_size / 2) * fireTime - max_size / 20;
         Ray impactRay = new Ray(pos, direction);
 
         RaycastHit[] hit = Physics.RaycastAll(impactRay, dis);
@@ -254,7 +256,6 @@ public class Bomb : MonoBehaviour {
                 // if the actual fire length is smaller than planned fire length then the time that fire reach to the object is the portion of the planned time
                 animation_length = GetDistanceToNearestWall(m_hit.collider.gameObject, direction);
                 animation_length = ((animation_length) * max_size + max_size / 20);
-                Firelength_bomb_i.Add(animation_length);
                 float planned_length = ((length) * max_size + max_size / 2);
                 float ratio_real_planned = animation_length / (planned_length * fireTime);
 
@@ -266,6 +267,8 @@ public class Bomb : MonoBehaviour {
                 }
                 //Spawn a powerup based on its drop chance
                 m_hit.collider.GetComponent<DestructibleWall>().SpawnAPowerUp();
+
+//                mPlayerInfo.IncreasePlayerPoint(1.0f, PlayerController.myPointType.Cube);
 
                 Destroy(m_hit.collider.gameObject, ratio_real_planned * fireTime);
                 flag_continue = false;

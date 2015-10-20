@@ -39,6 +39,11 @@ public class LevelManager : MonoBehaviour {
         Application.LoadLevel(Application.loadedLevel + 1);
     }
 
+    public void LoadCurLevel()
+    {
+        Application.LoadLevel(Application.loadedLevel);
+    }
+
     public void LoadLoseScreen()
     {
         
