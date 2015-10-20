@@ -9,11 +9,14 @@ public class EscapeDoor : MonoBehaviour {
 
     private bool isInit = false;
 
-    public Text winningText;
+    private Text winningText;
+
+    public AudioClip tunnelSound;
 
 	// Use this for initialization
 	void Start () {
         levelManager = FindObjectOfType<LevelManager>();
+        winningText = GameObject.Find("Winning Text").GetComponent<Text>();
 	}
 	
 	// Update is called once per frame
@@ -31,6 +34,7 @@ public class EscapeDoor : MonoBehaviour {
         if (other.GetComponent<PlayerController>() && isInit)
         {
             Debug.Log("Player enter trigger");
+            AudioSource.PlayClipAtPoint(tunnelSound, transform.position);
             winningText.text = "You Win!";
             Invoke("Progress", 3f);
         }

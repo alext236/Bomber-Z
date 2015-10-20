@@ -71,7 +71,7 @@ public class Bomb : MonoBehaviour {
         CreateMap myMapInfo = FindObjectOfType<Playground>().GetComponent<CreateMap>();
         myGridSize = myMapInfo.getGridSize();
         myLocationOfFirstCube = myMapInfo.getFirstLocationOfCube();
-        Invoke("StartExplosionAnimation", timeToExplode);
+        //Invoke("StartExplosionAnimation", timeToExplode);
     }
 
     // Update is called once per frame

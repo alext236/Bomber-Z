@@ -53,21 +53,21 @@ public class MusicPlayer : MonoBehaviour
                 Debug.LogError("No main game music");
             }            
         }
-        else if (level == 2)
-        {      //Game over
-            if (gameOver)
-            {
-                soundTrack.clip = gameOver;
-                soundTrack.Play();
-            } else
-            {
-                Debug.LogError("No game over music");
-            }
+        //else if (level == 2)
+        //{      //Game over
+        //    if (gameOver)
+        //    {
+        //        soundTrack.clip = gameOver;
+        //        soundTrack.Play();
+        //    } else
+        //    {
+        //        Debug.LogError("No game over music");
+        //    }
             
-        }
-        else if (level == 3)
-        {
-            return;
-        }
+        //}
+        //else if (level == 3)
+        //{
+        //    return;
+        //}
     }
 }

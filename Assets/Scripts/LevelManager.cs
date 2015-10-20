@@ -46,7 +46,7 @@ public class LevelManager : MonoBehaviour {
 
     public void LoadLoseScreen()
     {
-        
+        //Application.LoadLevel("02 Game Over");
     }
 
     public void LoadWinScreen()
