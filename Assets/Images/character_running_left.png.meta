@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 88edb106ca69444558d36d1edce8e761
-timeCreated: 1445348305
+timeCreated: 1445072243
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -60,7 +60,7 @@ TextureImporter:
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: character_running_left_1
@@ -70,7 +70,7 @@ TextureImporter:
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: character_running_left_2
@@ -80,7 +80,7 @@ TextureImporter:
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: character_running_left_3
@@ -90,7 +90,7 @@ TextureImporter:
         y: 0
         width: 80
         height: 80
-      alignment: 0
+      alignment: 1
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
