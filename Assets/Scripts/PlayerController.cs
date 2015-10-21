@@ -306,7 +306,7 @@ public class PlayerController : MonoBehaviour
                                 check_hit_bomb[i] = false;
                                 flag_continue_on_ray = false;
                             }
-                            if (m_hit.transform.name == "Cube")
+                            if (m_hit.collider.GetComponent<IndestructibleWall>() || m_hit.collider.GetComponent<DestructibleWall>())
                             {
                                 flag_continue_on_ray = false;
                                 ((ArrayList) check_directions_forEachBomb[i])[j] = false;
@@ -374,7 +374,7 @@ public class PlayerController : MonoBehaviour
         for (int i = 0; i < hit.Length; i++)
         {
             Debug.DrawRay(originPos, Vector3.down, Color.red);
-            if (hit[i].transform.name == "Cube") //wall or indestructible wall
+            if (hit[i].collider.GetComponent<IndestructibleWall>() || hit[i].collider.GetComponent<DestructibleWall>()) //wall or indestructible wall
             {
                 return true;
             }

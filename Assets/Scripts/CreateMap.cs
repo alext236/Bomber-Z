@@ -229,7 +229,7 @@ public class CreateMap : MonoBehaviour
         public Vector2 mEndBorder;
     }
 
-    public GameObject EnemyInfo;
+    public GameObject[] EnemyInfo;
     ArrayList myEnemies;
     public int EnemyNumbers = 5;
     public int numberOfFollowingEnemies = 5;
@@ -242,7 +242,8 @@ public class CreateMap : MonoBehaviour
         myEnemies = new ArrayList();
         for (int i = 0; i < EnemyNumbers; i++)
         {
-            GameObject newEnemy = Instantiate(EnemyInfo) as GameObject;
+            int random = UnityEngine.Random.Range(0, EnemyInfo.Length);
+            GameObject newEnemy = Instantiate(EnemyInfo[random]) as GameObject;
             newEnemy.name = "Enemy" + i.ToString();
             newEnemy.GetComponent<BoxCollider>().size = new Vector3(1.0f, 1.0f, 1.0f);
             EnemyScript mEnemy_i_script = newEnemy.GetComponent<EnemyScript>();
@@ -322,6 +323,9 @@ public class CreateMap : MonoBehaviour
     ArrayList myGameObjects;
     int numberOfDestroyableCubes = 0;
     ///////////
+    //Prefabs to spawn on the map
+    public GameObject[] housePrefab;
+    public GameObject[] carPrefab;
 
     void initializing_Map(int iN, int iM)
     {
@@ -388,7 +392,7 @@ public class CreateMap : MonoBehaviour
 
     void myCreateScene(Vector3 iGridSize, Vector3 iLocation, int numberOfBox)
     {
-
+        //Spawn Indestructible Walls
         Vector3 d_pos = new Vector3(iLocation[0], iLocation[1] + iGridSize[1] / 2, iLocation[2]);
         for (int j = 0; j < M; j++)
         {
@@ -396,10 +400,11 @@ public class CreateMap : MonoBehaviour
             {
                 if (myAreaDivider.getMapVal(myMap, i, j) == (int) GridType.inDestructible)
                 {
-                    //Later Instantiate here a wall prefab instead of a simple cube
-                    GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
-                    cube_ij.transform.localScale = iGridSize;
+                    int random = UnityEngine.Random.Range(0, housePrefab.Length);
+                    GameObject cube_ij = Instantiate(housePrefab[random]) as GameObject;
+                    //GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1]/8, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
+                    //cube_ij.transform.localScale = iGridSize;
                     //cube_ij.isStatic = true;
                     //NavMeshObstacle mcube_obstacle = cube_ij.AddComponent<NavMeshObstacle>();
                     //mcube_obstacle.size = iGridSize / 5 + new Vector3(0.05f, 0.05f, 0.05f);
@@ -415,13 +420,15 @@ public class CreateMap : MonoBehaviour
                         cube_ij.transform.SetParent(GameObject.Find("Indestructible Wall").transform);
                     }
 
-                    //Add tag "IndestructibleWall" to the cube
+                    //Add tag "IndestructibleWall" to the cube and add IndestructibleWall class
                     cube_ij.tag = "IndestructibleWall";
+                    cube_ij.AddComponent<IndestructibleWall>();
                     myGameObjects.Add(cube_ij);
                 }
             }
         }
 
+        //Spawn Destructible Walls
         numberOfDestroyableCubes = 0;
         for (int k = 0; k < numberOfBox; k++)
         {
@@ -430,9 +437,12 @@ public class CreateMap : MonoBehaviour
             if (myAreaDivider.getMapVal(myMap, i, j) == (int)GridType.Free)
             {
                 myAreaDivider.setMapVal(myMap, i, j, (int)GridType.Destructible);
-                GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 2, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
-                cube_ij.transform.localScale = iGridSize;
+                //GameObject cube_ij = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+                int random = UnityEngine.Random.Range(0, carPrefab.Length);
+                GameObject cube_ij = Instantiate(carPrefab[random]) as GameObject;
+                cube_ij.transform.position = new Vector3(i * iGridSize[0], iGridSize[1] / 8, j * iGridSize[2]) + d_pos;//x <- X(i), y <- Y(j)
+                //cube_ij.transform.localScale = iGridSize;
 
                 //NavMeshObstacle mcube_obstacle = cube_ij.AddComponent<NavMeshObstacle>();
                 //mcube_obstacle.size = iGridSize / 5 + new Vector3(0.01f, 0.01f, 0.01f);
@@ -454,8 +464,8 @@ public class CreateMap : MonoBehaviour
                 cube_ij.GetComponent<DestructibleWall>().powerUps.AddRange(FindObjectOfType<Playground>().HiddenPowerUps);
 
 
-                Material newMaterial = new Material((Shader.Find("Diffuse")));
-                cube_ij.GetComponent<MeshRenderer>().material = newMaterial;
+                //Material newMaterial = new Material((Shader.Find("Diffuse")));
+                //cube_ij.GetComponent<MeshRenderer>().material = newMaterial;
                 //cube_ij.AddComponent<Material>();
                 myGameObjects.Add(cube_ij);
                 numberOfDestroyableCubes++;

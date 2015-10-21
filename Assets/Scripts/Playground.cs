@@ -28,7 +28,7 @@ public class Playground : MonoBehaviour {
     // Use this for initialization
     void Awake () {
         Bomb.length = 1;
-        ModifyMaterialTiling();
+        //ModifyMaterialTiling();
         SetGroundSize();
         SetPlaygroundAxis();
 
