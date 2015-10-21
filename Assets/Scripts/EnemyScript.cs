@@ -512,18 +512,18 @@ public class EnemyScript : MonoBehaviour
         int max_counter = 0;
         if (iRandcol == 0)
         {
-            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.M - 1);
+            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.N - 1);
             max_counter = (int)myMapInfo.N;
         }
         else
         {
-            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.N - 1);
+            rand_pos = UnityEngine.Random.Range((int)1, (int)myMapInfo.M - 1);
             max_counter = (int)myMapInfo.M;
         }
         int index_i = 0;
         int index_j = 0;
-        int ret_i = 1;
-        int ret_j = 1;
+        int ret_i = -1;
+        int ret_j = -1;
         int rand_counter = UnityEngine.Random.Range((int)0, (int)max_counter - 1);
         float m_dis = -max_counter;
         for (int i = 0; i < max_counter && flag_continue; i++)
@@ -540,21 +540,23 @@ public class EnemyScript : MonoBehaviour
             }
             if (getMapVal(myMap, index_i, index_j) == (int)CreateMap.GridType.Free)
             {
-                if (i >= rand_counter)
-                {
-                    Vector3 index_player_pos = mPosToMapIndex(iPlayerPos, iLocationOfFirstCube, iGridSize);
-                    index_player_pos.x = Mathf.Round(index_player_pos.x);
-                    index_player_pos.z = Mathf.Round(index_player_pos.z);
+                
+                Vector3 index_player_pos = mPosToMapIndex(iPlayerPos, iLocationOfFirstCube, iGridSize);
+                index_player_pos.x = Mathf.Round(index_player_pos.x);
+                index_player_pos.z = Mathf.Round(index_player_pos.z);
 
-                    Vector3 found_index = new Vector3(index_i, 0, index_j);
-                    if ((index_player_pos - found_index).magnitude >= m_dis)
-                    {
-                        m_dis = (index_player_pos - found_index).magnitude;
-                        ret_i = index_i;
-                        ret_j = index_j;
-                    }
+                Vector3 found_index = new Vector3(index_i, 0, index_j);
+                if ((index_player_pos - found_index).magnitude >= m_dis)
+                {
+                    m_dis = (index_player_pos - found_index).magnitude;
+                    ret_i = index_i;
+                    ret_j = index_j;
                 }
             }
+        }
+        if (ret_i == -1)
+        {
+            int notifyme = 1;
         }
         return new Vector3(iLocationOfFirstCube[0], 0f, iLocationOfFirstCube[2]) + new Vector3(ret_i * iGridSize[0], 0f, ret_j * iGridSize[2]);
     }
