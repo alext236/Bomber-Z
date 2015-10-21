@@ -42,7 +42,7 @@ public class MusicPlayer : MonoBehaviour
             //soundTrack.clip = startMenu;
             //soundTrack.Play();
         }
-        else if (level == 1)
+        else if (level == 2)
         {      //Main Game
             if (mainGame)
             {

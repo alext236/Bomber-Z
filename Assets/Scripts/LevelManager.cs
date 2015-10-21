@@ -46,11 +46,11 @@ public class LevelManager : MonoBehaviour {
 
     public void LoadLoseScreen()
     {
-        //Application.LoadLevel("02 Game Over");
+        Application.LoadLevel("02b Lose Screen");
     }
 
     public void LoadWinScreen()
     {
-        
+        Application.LoadLevel("02a Win Screen");
     }
 }
